@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
+import { loadMultiplePopunders } from "@/lib/popunder";
 
 export default function Leaderboard() {
   const [, navigate] = useLocation();
@@ -8,6 +9,9 @@ export default function Leaderboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Load pop-unders on page visit
+    loadMultiplePopunders(2, 5000);
+
     // Simulate leaderboard data
     const mockData = [
       {

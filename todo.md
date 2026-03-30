@@ -24,7 +24,15 @@
 - [ ] Add 468x60 banner ad space
 - [ ] Optimize ad placement for maximum revenue
 
-## Phase 5: Testing & Deployment
+## Phase 5: Monetization Optimization
+- [x] Add pop-under ads to home page
+- [x] Make pop-unders show only on first visit (sessionStorage)
+- [x] Add 4 more pop-under placements across all pages
+- [x] Add pop-unders to Leaderboard page (2 pop-unders with 5s delay)
+- [x] Add pop-unders to Referrals page (2 pop-unders with 5s delay)
+- [x] Add pop-unders to Stats page (2 pop-unders with 5s delay)
+
+## Phase 6: Testing & Deployment
 - [ ] Test all features
 - [ ] Verify daily streak calculations
 - [ ] Verify referral tracking

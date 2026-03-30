@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
+import { loadMultiplePopunders } from "@/lib/popunder";
 
 export default function Referrals() {
   const [, navigate] = useLocation();
@@ -12,6 +13,9 @@ export default function Referrals() {
   const [recentReferrals, setRecentReferrals] = useState<any[]>([]);
 
   useEffect(() => {
+    // Load pop-unders on page visit
+    loadMultiplePopunders(2, 5000);
+
     // Generate referral link
     const link = `${window.location.origin}/?ref=${referralCode}`;
     setReferralLink(link);

@@ -13,9 +13,10 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
+import { loadPopunderOnFirstVisit, loadMultiplePopunders } from "@/lib/popunder";
 import Confetti from "@/components/Confetti";
 
-// Load Adsterra ads and pop-under ads
+// Load Adsterra banner ads (static, always show)
 if (typeof window !== 'undefined') {
   const script1 = document.createElement('script');
   script1.async = true;
@@ -30,11 +31,6 @@ if (typeof window !== 'undefined') {
   const script3 = document.createElement('script');
   script3.src = 'https://pl29014557.profitablecpmratenetwork.com/ca/c6/f4/cac6f4ed784dcc38f734d31b268d344f.js';
   document.head.appendChild(script3);
-
-  // Pop-under ads (most profitable)
-  const popUnderScript = document.createElement('script');
-  popUnderScript.src = 'https://pl29014555.profitablecpmratenetwork.com/17/8e/40/178e4091eddcb131be13ce883019531d.js';
-  document.head.appendChild(popUnderScript);
 
   // Banner 468x60 ad
   const bannerScript = document.createElement('script');
@@ -238,6 +234,12 @@ export default function Home() {
       document.head.appendChild(metaKeywords);
     }
     metaKeywords.content = 'doge faucet, free doge, earn dogecoin, crypto faucet, dogecoin rewards, free cryptocurrency, doge rewards, dogecoin faucet';
+
+    // Load pop-unders on first visit only
+    loadPopunderOnFirstVisit();
+
+    // Load additional pop-unders with delay (2 more after 8 and 15 seconds)
+    loadMultiplePopunders(2, 8000);
   }, []);
   const [memePhrase, setMemePhrase] = useState("");
   const [showMeme, setShowMeme] = useState(false);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
+import { loadMultiplePopunders } from "@/lib/popunder";
 
 export default function Stats() {
   const [, navigate] = useLocation();
@@ -14,6 +15,9 @@ export default function Stats() {
   });
 
   useEffect(() => {
+    // Load pop-unders on page visit
+    loadMultiplePopunders(2, 5000);
+
     // Simulate user stats
     setStats({
       totalEarned: "1.2345",
