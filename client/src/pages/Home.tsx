@@ -14,6 +14,23 @@ import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import Confetti from "@/components/Confetti";
 
+// Load Adsterra ads
+if (typeof window !== 'undefined') {
+  const script1 = document.createElement('script');
+  script1.async = true;
+  script1.src = 'https://pl29014556.profitablecpmratenetwork.com/0ee654d9e26c67d753bcd60504761f2b/invoke.js';
+  script1.setAttribute('data-cfasync', 'false');
+  document.head.appendChild(script1);
+
+  const script2 = document.createElement('script');
+  script2.src = 'https://pl29014555.profitablecpmratenetwork.com/17/8e/40/178e4091eddcb131be13ce883019531d.js';
+  document.head.appendChild(script2);
+
+  const script3 = document.createElement('script');
+  script3.src = 'https://pl29014557.profitablecpmratenetwork.com/ca/c6/f4/cac6f4ed784dcc38f734d31b268d344f.js';
+  document.head.appendChild(script3);
+}
+
 // ─── Constants ────────────────────────────────────────────────
 const COOLDOWN_SECONDS = 6 * 3600; // 6 hours
 const CLAIM_AMOUNTS = { min: 0.0021, max: 0.0023 };
@@ -108,14 +125,28 @@ function CountdownRing({ remaining, total }: { remaining: number; total: number 
   );
 }
 
-// ─── Ad Space Component ───────────────────────────────────────
+// ─// ─── Ad Space Component ───────────────────────────────────
 function AdSpace({ id }: { id: string }) {
   return (
     <div
-      className="doge-card p-6 text-center bg-amber-100 border-2 border-dashed border-amber-300 min-h-24 flex items-center justify-center"
+      className="w-full flex justify-center"
       id={`ad-space-${id}`}
     >
-      <p className="text-amber-600 font-semibold text-sm">Ad Space {id} — Paste your ad code here</p>
+      <div style={{width: '100%', margin: 'auto', position: 'relative', zIndex: 99998}}>
+        <iframe 
+          data-aa='2432304' 
+          src='//acceptable.a-ads.com/2432304/?size=Adaptive'
+          style={{
+            border: '0', 
+            padding: '0', 
+            width: '70%', 
+            height: 'auto', 
+            overflow: 'hidden',
+            display: 'block',
+            margin: 'auto'
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -166,6 +197,7 @@ export default function Home() {
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawAddress, setWithdrawAddress] = useState("");
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawalPending, setWithdrawalPending] = useState(false);
   const coinIdRef = useRef(0);
   const btnRef = useRef<HTMLButtonElement>(null);
 
@@ -239,10 +271,12 @@ export default function Home() {
       return;
     }
     // TODO: Call backend to process withdrawal
-    toast.success(`Withdrawal of ${amount} DOGE initiated to ${withdrawAddress}`);
+    setWithdrawalPending(true);
+    toast.success(`⏳ Withdrawal of ${amount} DOGE is pending...`);
     setShowWithdrawModal(false);
     setWithdrawAmount("");
     setWithdrawAddress("");
+    // Keep pending state for display
   };
 
   const canClaim = cooldown === 0 && isAuthenticated;
@@ -296,9 +330,11 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ── Ad Space 1 (Top Banner) ── */}
+      {/* ── Ad Space 1 (Top Banner - Adsterra) ── */}
       <div className="container py-4">
-        <AdSpace id="1" />
+        <div className="w-full flex justify-center">
+          <div id="container-0ee654d9e26c67d753bcd60504761f2b" style={{width: '100%', minHeight: '100px'}}></div>
+        </div>
       </div>
 
       {/* ── Hero Section ── */}
@@ -403,9 +439,10 @@ export default function Home() {
 
                   <motion.button
                     onClick={() => setShowWithdrawModal(true)}
-                    className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-lg hover:scale-105 transition-transform"
+                    disabled={withdrawalPending}
+                    className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    💰 Withdraw DOGE
+                    {withdrawalPending ? "⏳ Withdrawal Pending" : "💰 Withdraw DOGE"}
                   </motion.button>
                 </>
               )}
@@ -424,7 +461,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Ad Space 3 (Between sections) ── */}
+      {/* ── Ad Space 3 (Between sections - A-ADS) ── */}
       <div className="container py-4">
         <AdSpace id="3" />
       </div>
@@ -470,9 +507,15 @@ export default function Home() {
         </section>
       )}
 
-      {/* ── Ad Space 4 (Between sections) ── */}
+      {/* ── Ad Space 4 (Between sections - Adsterra Link) ── */}
       <div className="container py-4">
-        <AdSpace id="4" />
+        <div className="w-full flex justify-center">
+          <a href="https://www.profitablecpmratenetwork.com/f06jub373?key=a8935f5f6d1250ce9b45339a50755bed" target="_blank" rel="noopener noreferrer" className="inline-block">
+            <div className="doge-card p-6 text-center bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold rounded-lg hover:scale-105 transition-transform">
+              🎁 Earn Extra Rewards - Click Here!
+            </div>
+          </a>
+        </div>
       </div>
 
       {/* ── How It Works ── */}
@@ -510,7 +553,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Ad Space 5 (Footer) ── */}
+      {/* ── Ad Space 5 (Footer - A-ADS) ── */}
       <div className="container py-4">
         <AdSpace id="5" />
       </div>
