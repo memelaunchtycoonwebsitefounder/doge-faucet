@@ -12,9 +12,10 @@ import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
+import { useLocation } from "wouter";
 import Confetti from "@/components/Confetti";
 
-// Load Adsterra ads
+// Load Adsterra ads and pop-under ads
 if (typeof window !== 'undefined') {
   const script1 = document.createElement('script');
   script1.async = true;
@@ -29,6 +30,28 @@ if (typeof window !== 'undefined') {
   const script3 = document.createElement('script');
   script3.src = 'https://pl29014557.profitablecpmratenetwork.com/ca/c6/f4/cac6f4ed784dcc38f734d31b268d344f.js';
   document.head.appendChild(script3);
+
+  // Pop-under ads (most profitable)
+  const popUnderScript = document.createElement('script');
+  popUnderScript.src = 'https://pl29014555.profitablecpmratenetwork.com/17/8e/40/178e4091eddcb131be13ce883019531d.js';
+  document.head.appendChild(popUnderScript);
+
+  // Banner 468x60 ad
+  const bannerScript = document.createElement('script');
+  bannerScript.innerHTML = `
+    atOptions = {
+      'key' : '19cf032afad8f11d35833a2921442c1e',
+      'format' : 'iframe',
+      'height' : 60,
+      'width' : 468,
+      'params' : {}
+    };
+  `;
+  document.head.appendChild(bannerScript);
+
+  const bannerInvokeScript = document.createElement('script');
+  bannerInvokeScript.src = 'https://www.highperformanceformat.com/19cf032afad8f11d35833a2921442c1e/invoke.js';
+  document.head.appendChild(bannerInvokeScript);
 }
 
 // ─── Constants ────────────────────────────────────────────────
@@ -191,6 +214,7 @@ function TaskCard({ task, onComplete }: { task: { id: string; title: string; rew
 // ─── Main Component ───────────────────────────────────────────
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
+  const [, navigate] = useLocation();
   const [quoteIdx, setQuoteIdx] = useState(0);
 
   // SEO: Set page title and meta tags
@@ -377,6 +401,17 @@ export default function Home() {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <div className="flex gap-1 sm:gap-2 w-full sm:w-auto justify-center flex-wrap">
+            <button onClick={() => navigate("/leaderboard")} className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-orange-400 text-white rounded-lg hover:bg-orange-500 transition font-bold">
+              🏆 Leaderboard
+            </button>
+            <button onClick={() => navigate("/referrals")} className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition font-bold">
+              🎁 Referrals
+            </button>
+            <button onClick={() => navigate("/stats")} className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-blue-400 text-white rounded-lg hover:bg-blue-500 transition font-bold">
+              📊 Stats
+            </button>
+          </div>
           <div className="flex items-center gap-2 bg-amber-100 border-2 border-amber-300 rounded-xl px-3 sm:px-4 py-2 w-full sm:w-auto justify-center">
             <span className="text-amber-600 text-xs sm:text-sm font-bold">Balance:</span>
             <span className="text-amber-800 font-extrabold text-sm sm:text-sm">
