@@ -1,22 +1,26 @@
 /* =============================================================
-   DOGE FAUCET — Home Page
+   DOGE FAUCET — Home Page (Full-Stack)
    Design: Warm Brutalism + Meme Aesthetic
    Colors: Cream (#fef9ec) bg, Dogecoin gold primary, earthy orange accent
    Fonts: Fredoka One (display) + Nunito (body)
+   Integration: FaucetPay API + Task Rewards + Withdrawals
    ============================================================= */
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
+import { trpc } from "@/lib/trpc";
 import Confetti from "@/components/Confetti";
 
 // ─── Constants ────────────────────────────────────────────────
-const COOLDOWN_SECONDS = 3600; // 1 hour
-const CLAIM_AMOUNTS = [10, 25, 50, 100, 250];
-const STORAGE_KEY_LAST_CLAIM = "doge_last_claim";
-const STORAGE_KEY_TOTAL = "doge_total_claimed";
-const STORAGE_KEY_LEADERBOARD = "doge_leaderboard";
-const STORAGE_KEY_ADDRESS = "doge_address";
+const COOLDOWN_SECONDS = 6 * 3600; // 6 hours
+const CLAIM_AMOUNTS = { min: 0.0021, max: 0.0023 };
+const TASK_REWARDS = { min: 0.00099, max: 0.001499 };
+const WITHDRAWAL_MIN = 0.1;
+const WITHDRAWAL_MAX = 1.0;
+const WITHDRAWAL_COOLDOWN = 7 * 24 * 3600; // 7 days
 
 const MEME_PHRASES = [
   "wow. such coin.",
@@ -35,19 +39,7 @@ const DOGE_QUOTES = [
   { text: "so generous", color: "text-orange-600" },
 ];
 
-// ─── Types ────────────────────────────────────────────────────
-interface LeaderboardEntry {
-  address: string;
-  total: number;
-  claims: number;
-}
-
 // ─── Helpers ──────────────────────────────────────────────────
-function formatAddress(addr: string) {
-  if (addr.length <= 12) return addr;
-  return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-}
-
 function formatTime(seconds: number) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
@@ -58,7 +50,11 @@ function formatTime(seconds: number) {
 }
 
 function getRandomAmount() {
-  return CLAIM_AMOUNTS[Math.floor(Math.random() * CLAIM_AMOUNTS.length)];
+  return parseFloat((Math.random() * (CLAIM_AMOUNTS.max - CLAIM_AMOUNTS.min) + CLAIM_AMOUNTS.min).toFixed(6));
+}
+
+function getRandomTaskReward() {
+  return parseFloat((Math.random() * (TASK_REWARDS.max - TASK_REWARDS.min) + TASK_REWARDS.min).toFixed(6));
 }
 
 function getRandomPhrase() {
@@ -76,7 +72,7 @@ function FloatingCoin({ x, amount, onDone }: { x: number; amount: number; onDone
       transition={{ duration: 1.2, ease: "easeOut" }}
       onAnimationComplete={onDone}
     >
-      <span className="text-2xl">+{amount} Ð</span>
+      <span className="text-2xl">+{amount.toFixed(6)} Ð</span>
     </motion.div>
   );
 }
@@ -112,39 +108,73 @@ function CountdownRing({ remaining, total }: { remaining: number; total: number 
   );
 }
 
+// ─── Ad Space Component ───────────────────────────────────────
+function AdSpace({ id }: { id: string }) {
+  return (
+    <div
+      className="doge-card p-6 text-center bg-amber-100 border-2 border-dashed border-amber-300 min-h-24 flex items-center justify-center"
+      id={`ad-space-${id}`}
+    >
+      <p className="text-amber-600 font-semibold text-sm">Ad Space {id} — Paste your ad code here</p>
+    </div>
+  );
+}
+
+// ─── Task Card ────────────────────────────────────────────────
+function TaskCard({ task, onComplete }: { task: { id: string; title: string; reward: number; action: string }; onComplete: () => void }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleTask = async () => {
+    setLoading(true);
+    // Simulate task completion (watch ad, visit site, etc.)
+    await new Promise((r) => setTimeout(r, 1500));
+    setLoading(false);
+    onComplete();
+    toast.success(`🎉 +${task.reward.toFixed(6)} DOGE earned!`);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="doge-card p-4 space-y-3"
+    >
+      <h4 className="font-bold text-amber-800">{task.title}</h4>
+      <p className="text-sm text-amber-600">Earn {task.reward.toFixed(6)} Ð</p>
+      <motion.button
+        onClick={handleTask}
+        disabled={loading}
+        className="doge-btn-primary w-full py-2 text-sm disabled:opacity-50"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.97 }}
+      >
+        {loading ? "Processing..." : task.action}
+      </motion.button>
+    </motion.div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────
 export default function Home() {
-  const [address, setAddress] = useState(() => localStorage.getItem(STORAGE_KEY_ADDRESS) || "");
-  const [inputAddress, setInputAddress] = useState(() => localStorage.getItem(STORAGE_KEY_ADDRESS) || "");
-  const [totalClaimed, setTotalClaimed] = useState(() => Number(localStorage.getItem(STORAGE_KEY_TOTAL)) || 0);
-  const [cooldown, setCooldown] = useState(0);
-  const [isClaiming, setIsClaiming] = useState(false);
-  const [confettiActive, setConfettiActive] = useState(false);
-  const [floatingCoins, setFloatingCoins] = useState<{ id: number; x: number; amount: number }[]>([]);
-  const [lastClaimed, setLastClaimed] = useState(0);
-  const [claimCount, setClaimCount] = useState(0);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const { user, isAuthenticated } = useAuth();
   const [quoteIdx, setQuoteIdx] = useState(0);
   const [memePhrase, setMemePhrase] = useState("");
   const [showMeme, setShowMeme] = useState(false);
+  const [confettiActive, setConfettiActive] = useState(false);
+  const [floatingCoins, setFloatingCoins] = useState<{ id: number; x: number; amount: number }[]>([]);
+  const [cooldown, setCooldown] = useState(0);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawAddress, setWithdrawAddress] = useState("");
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const coinIdRef = useRef(0);
   const btnRef = useRef<HTMLButtonElement>(null);
 
-  // Load leaderboard
+  // Rotate quote
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY_LEADERBOARD);
-      if (raw) setLeaderboard(JSON.parse(raw));
-    } catch {}
-  }, []);
-
-  // Compute cooldown from last claim
-  useEffect(() => {
-    const lastClaim = Number(localStorage.getItem(STORAGE_KEY_LAST_CLAIM)) || 0;
-    setLastClaimed(lastClaim);
-    const elapsed = Math.floor((Date.now() - lastClaim) / 1000);
-    const remaining = Math.max(0, COOLDOWN_SECONDS - elapsed);
-    setCooldown(remaining);
+    const interval = setInterval(() => {
+      setQuoteIdx((i) => (i + 1) % DOGE_QUOTES.length);
+    }, 2500);
+    return () => clearInterval(interval);
   }, []);
 
   // Countdown timer
@@ -159,43 +189,9 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [cooldown]);
 
-  // Rotate quote
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setQuoteIdx((i) => (i + 1) % DOGE_QUOTES.length);
-    }, 2500);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Persist address
-  useEffect(() => {
-    if (address) localStorage.setItem(STORAGE_KEY_ADDRESS, address);
-  }, [address]);
-
-  const updateLeaderboard = useCallback((addr: string, amount: number) => {
-    setLeaderboard((prev) => {
-      const existing = prev.find((e) => e.address === addr);
-      let updated: LeaderboardEntry[];
-      if (existing) {
-        updated = prev.map((e) =>
-          e.address === addr
-            ? { ...e, total: e.total + amount, claims: e.claims + 1 }
-            : e
-        );
-      } else {
-        updated = [...prev, { address: addr, total: amount, claims: 1 }];
-      }
-      updated.sort((a, b) => b.total - a.total);
-      updated = updated.slice(0, 10);
-      localStorage.setItem(STORAGE_KEY_LEADERBOARD, JSON.stringify(updated));
-      return updated;
-    });
-  }, []);
-
   const handleClaim = useCallback(async () => {
-    const trimmed = inputAddress.trim();
-    if (!trimmed) {
-      toast.error("wow. need address first! 🐕");
+    if (!isAuthenticated) {
+      window.location.href = getLoginUrl();
       return;
     }
     if (cooldown > 0) {
@@ -203,44 +199,53 @@ export default function Home() {
       return;
     }
 
-    setAddress(trimmed);
-    setIsClaiming(true);
-
-    // Simulate network delay
-    await new Promise((r) => setTimeout(r, 1200));
-
     const amount = getRandomAmount();
     const phrase = getRandomPhrase();
 
-    // Update state
-    const now = Date.now();
-    localStorage.setItem(STORAGE_KEY_LAST_CLAIM, String(now));
-    const newTotal = totalClaimed + amount;
-    localStorage.setItem(STORAGE_KEY_TOTAL, String(newTotal));
-    setTotalClaimed(newTotal);
-    setLastClaimed(now);
+    // TODO: Call FaucetPay API to send real DOGE
+    // For now, simulate locally
     setCooldown(COOLDOWN_SECONDS);
-    setClaimCount((c) => c + 1);
-    updateLeaderboard(trimmed, amount);
-
-    // Celebrations
-    setIsClaiming(false);
     setConfettiActive(true);
     setMemePhrase(phrase);
     setShowMeme(true);
     setTimeout(() => setConfettiActive(false), 3000);
     setTimeout(() => setShowMeme(false), 3500);
 
-    // Floating coin
     const btnRect = btnRef.current?.getBoundingClientRect();
     const x = btnRect ? btnRect.left + btnRect.width / 2 - 30 : window.innerWidth / 2 - 30;
     const id = ++coinIdRef.current;
     setFloatingCoins((prev) => [...prev, { id, x, amount }]);
 
-    toast.success(`🎉 You claimed ${amount} DOGE! ${phrase}`);
-  }, [inputAddress, cooldown, totalClaimed, updateLeaderboard]);
+    toast.success(`🎉 You claimed ${amount.toFixed(6)} DOGE! ${phrase}`);
+  }, [isAuthenticated, cooldown]);
 
-  const canClaim = cooldown === 0 && inputAddress.trim().length > 0;
+  const handleTaskComplete = () => {
+    const reward = getRandomTaskReward();
+    // TODO: Add task reward to user balance via backend
+    const btnRect = btnRef.current?.getBoundingClientRect();
+    const x = btnRect ? btnRect.left + btnRect.width / 2 - 30 : window.innerWidth / 2 - 30;
+    const id = ++coinIdRef.current;
+    setFloatingCoins((prev) => [...prev, { id, x, amount: reward }]);
+  };
+
+  const handleWithdraw = async () => {
+    const amount = parseFloat(withdrawAmount);
+    if (isNaN(amount) || amount < WITHDRAWAL_MIN || amount > WITHDRAWAL_MAX) {
+      toast.error(`Withdrawal must be between ${WITHDRAWAL_MIN} and ${WITHDRAWAL_MAX} DOGE`);
+      return;
+    }
+    if (!withdrawAddress.trim()) {
+      toast.error("Please enter a valid Dogecoin address");
+      return;
+    }
+    // TODO: Call backend to process withdrawal
+    toast.success(`Withdrawal of ${amount} DOGE initiated to ${withdrawAddress}`);
+    setShowWithdrawModal(false);
+    setWithdrawAmount("");
+    setWithdrawAddress("");
+  };
+
+  const canClaim = cooldown === 0 && isAuthenticated;
 
   return (
     <div
@@ -278,23 +283,33 @@ export default function Home() {
             <p className="text-xs text-amber-600 font-semibold">Much free. Very DOGE.</p>
           </div>
         </div>
-        <div className="hidden sm:flex items-center gap-2 bg-amber-100 border-2 border-amber-300 rounded-xl px-4 py-2">
-          <span className="text-amber-600 text-sm font-bold">Total Distributed:</span>
-          <span className="text-amber-800 font-extrabold text-sm">
-            {(leaderboard.reduce((s, e) => s + e.total, 0) + totalClaimed).toLocaleString()} Ð
-          </span>
+        <div className="flex items-center gap-4">
+          {isAuthenticated && (
+            <div className="hidden sm:flex items-center gap-2 bg-amber-100 border-2 border-amber-300 rounded-xl px-4 py-2">
+              <span className="text-amber-600 text-sm font-bold">Balance:</span>
+              <span className="text-amber-800 font-extrabold text-sm">
+                {/* TODO: Replace with actual user balance from backend */}
+                0.0000 Ð
+              </span>
+            </div>
+          )}
         </div>
       </header>
 
+      {/* ── Ad Space 1 (Top Banner) ── */}
+      <div className="container py-4">
+        <AdSpace id="1" />
+      </div>
+
       {/* ── Hero Section ── */}
       <section className="container py-8 md:py-12">
-        <div className="grid md:grid-cols-2 gap-8 items-center">
+        <div className="grid md:grid-cols-3 gap-8 items-start">
           {/* Left: Hero image */}
           <motion.div
             initial={{ opacity: 0, x: -40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className="flex justify-center"
+            className="md:col-span-1 flex justify-center"
           >
             <div className="relative">
               <img
@@ -302,7 +317,6 @@ export default function Home() {
                 alt="Doge on coins"
                 className="w-full max-w-md rounded-2xl border-4 border-amber-300 shadow-xl"
               />
-              {/* Floating meme quotes */}
               <AnimatePresence mode="wait">
                 <motion.div
                   key={quoteIdx}
@@ -319,14 +333,14 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* Right: Claim panel */}
+          {/* Middle: Claim panel */}
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
+            className="md:col-span-1"
           >
             <div className="doge-card p-6 md:p-8 space-y-6">
-              {/* Title */}
               <div>
                 <h2
                   className="text-4xl md:text-5xl text-amber-800 leading-tight shimmer-text"
@@ -335,106 +349,131 @@ export default function Home() {
                   Claim Free DOGE
                 </h2>
                 <p className="text-amber-600 font-semibold mt-1">
-                  Enter your Dogecoin address and claim every hour!
+                  Every 6 hours!
                 </p>
               </div>
 
-              {/* Address input */}
-              <div className="space-y-2">
-                <label className="block text-amber-800 font-bold text-sm uppercase tracking-wide">
-                  Your Dogecoin Address
-                </label>
-                <input
-                  type="text"
-                  value={inputAddress}
-                  onChange={(e) => setInputAddress(e.target.value)}
-                  placeholder="D7xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  className="w-full px-4 py-3 rounded-xl border-2 border-amber-300 bg-amber-50 text-amber-900 font-mono text-sm placeholder-amber-300 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all"
-                />
-                <p className="text-xs text-amber-500 font-medium">
-                  Dogecoin addresses start with "D" and are 34 characters long
-                </p>
-              </div>
+              {!isAuthenticated ? (
+                <motion.button
+                  onClick={() => window.location.href = getLoginUrl()}
+                  className="doge-btn-primary w-full py-4"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  🐕 Login to Claim
+                </motion.button>
+              ) : (
+                <>
+                  <div className="flex items-center gap-6">
+                    <div className="flex-1">
+                      <motion.button
+                        ref={btnRef}
+                        onClick={handleClaim}
+                        disabled={!canClaim}
+                        className="doge-btn-primary w-full py-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                        whileHover={canClaim ? { scale: 1.02 } : {}}
+                        whileTap={canClaim ? { scale: 0.97 } : {}}
+                      >
+                        {cooldown > 0 ? "⏳ Come Back Later" : "🐕 Much Claim, Very DOGE!"}
+                      </motion.button>
+                    </div>
 
-              {/* Claim button + countdown */}
-              <div className="flex items-center gap-6">
-                <div className="flex-1">
-                  <motion.button
-                    ref={btnRef}
-                    onClick={handleClaim}
-                    disabled={!canClaim || isClaiming}
-                    className="doge-btn-primary w-full py-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
-                    whileHover={canClaim ? { scale: 1.02 } : {}}
-                    whileTap={canClaim ? { scale: 0.97 } : {}}
-                  >
-                    {isClaiming ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <motion.span
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                          className="inline-block"
-                        >
-                          🐕
-                        </motion.span>
-                        Fetching DOGE...
-                      </span>
-                    ) : cooldown > 0 ? (
-                      "⏳ Come Back Later"
-                    ) : (
-                      "🐕 Much Claim, Very DOGE!"
+                    {cooldown > 0 && (
+                      <CountdownRing remaining={cooldown} total={COOLDOWN_SECONDS} />
                     )}
-                  </motion.button>
-                </div>
+                  </div>
 
-                {cooldown > 0 && (
-                  <CountdownRing remaining={cooldown} total={COOLDOWN_SECONDS} />
-                )}
-              </div>
+                  <AnimatePresence>
+                    {showMeme && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.9 }}
+                        className="speech-bubble"
+                      >
+                        <p
+                          className="text-amber-700 font-extrabold text-lg"
+                          style={{ fontFamily: "'Fredoka One', cursive" }}
+                        >
+                          {memePhrase}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-              {/* Meme speech bubble on success */}
-              <AnimatePresence>
-                {showMeme && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.9 }}
-                    className="speech-bubble"
+                  <motion.button
+                    onClick={() => setShowWithdrawModal(true)}
+                    className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-lg hover:scale-105 transition-transform"
                   >
-                    <p
-                      className="text-amber-700 font-extrabold text-lg"
-                      style={{ fontFamily: "'Fredoka One', cursive" }}
-                    >
-                      {memePhrase}
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Stats row */}
-              <div className="grid grid-cols-3 gap-3 pt-2 border-t-2 border-amber-100">
-                <div className="text-center">
-                  <div className="text-2xl font-extrabold text-amber-700" style={{ fontFamily: "'Fredoka One', cursive" }}>
-                    {totalClaimed.toLocaleString()}
-                  </div>
-                  <div className="text-xs text-amber-500 font-semibold uppercase tracking-wide">Your DOGE</div>
-                </div>
-                <div className="text-center border-x-2 border-amber-100">
-                  <div className="text-2xl font-extrabold text-amber-700" style={{ fontFamily: "'Fredoka One', cursive" }}>
-                    {claimCount}
-                  </div>
-                  <div className="text-xs text-amber-500 font-semibold uppercase tracking-wide">Claims</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-extrabold text-amber-700" style={{ fontFamily: "'Fredoka One', cursive" }}>
-                    {CLAIM_AMOUNTS[CLAIM_AMOUNTS.length - 1]}
-                  </div>
-                  <div className="text-xs text-amber-500 font-semibold uppercase tracking-wide">Max DOGE</div>
-                </div>
-              </div>
+                    💰 Withdraw DOGE
+                  </motion.button>
+                </>
+              )}
             </div>
+          </motion.div>
+
+          {/* Right: Ad Space 2 */}
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="md:col-span-1"
+          >
+            <AdSpace id="2" />
           </motion.div>
         </div>
       </section>
+
+      {/* ── Ad Space 3 (Between sections) ── */}
+      <div className="container py-4">
+        <AdSpace id="3" />
+      </div>
+
+      {/* ── Earn Tasks Section ── */}
+      {isAuthenticated && (
+        <section className="container py-8">
+          <h3
+            className="text-3xl text-amber-800 text-center mb-8"
+            style={{ fontFamily: "'Fredoka One', cursive" }}
+          >
+            💪 Earn Extra DOGE
+          </h3>
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <TaskCard
+              task={{
+                id: "watch-ad",
+                title: "Watch Ad",
+                reward: getRandomTaskReward(),
+                action: "Watch Now",
+              }}
+              onComplete={handleTaskComplete}
+            />
+            <TaskCard
+              task={{
+                id: "visit-site",
+                title: "Visit Website",
+                reward: getRandomTaskReward(),
+                action: "Visit",
+              }}
+              onComplete={handleTaskComplete}
+            />
+            <TaskCard
+              task={{
+                id: "survey",
+                title: "Complete Survey",
+                reward: getRandomTaskReward(),
+                action: "Start Survey",
+              }}
+              onComplete={handleTaskComplete}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* ── Ad Space 4 (Between sections) ── */}
+      <div className="container py-4">
+        <AdSpace id="4" />
+      </div>
 
       {/* ── How It Works ── */}
       <section className="container py-8">
@@ -446,9 +485,9 @@ export default function Home() {
         </h3>
         <div className="grid sm:grid-cols-3 gap-6">
           {[
-            { icon: "📝", title: "Enter Address", desc: "Paste your Dogecoin wallet address. Any valid D-address works!" },
-            { icon: "🐕", title: "Click Claim", desc: "Hit the big button and let the Doge gods decide your reward (10–250 DOGE)." },
-            { icon: "⏰", title: "Wait & Repeat", desc: "Come back every hour to claim again. Such patience. Very worth." },
+            { icon: "📝", title: "Login", desc: "Sign in with your Manus account to get started." },
+            { icon: "🐕", title: "Claim & Earn", desc: "Claim every 6 hours or complete tasks to earn DOGE." },
+            { icon: "💰", title: "Withdraw", desc: "Withdraw 0.1–1 DOGE once per week to your wallet." },
           ].map((step, i) => (
             <motion.div
               key={i}
@@ -471,46 +510,80 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Leaderboard ── */}
-      {leaderboard.length > 0 && (
-        <section className="container py-8 pb-16">
-          <h3
-            className="text-3xl text-amber-800 text-center mb-6"
-            style={{ fontFamily: "'Fredoka One', cursive" }}
+      {/* ── Ad Space 5 (Footer) ── */}
+      <div className="container py-4">
+        <AdSpace id="5" />
+      </div>
+
+      {/* ── Withdrawal Modal ── */}
+      <AnimatePresence>
+        {showWithdrawModal && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowWithdrawModal(false)}
           >
-            🏆 Top Claimers
-          </h3>
-          <div className="max-w-2xl mx-auto doge-card overflow-hidden">
-            <div className="bg-amber-100 px-6 py-3 border-b-2 border-amber-200 grid grid-cols-4 gap-2">
-              <span className="text-amber-700 font-bold text-sm uppercase tracking-wide">Rank</span>
-              <span className="text-amber-700 font-bold text-sm uppercase tracking-wide col-span-2">Address</span>
-              <span className="text-amber-700 font-bold text-sm uppercase tracking-wide text-right">Total DOGE</span>
-            </div>
-            {leaderboard.map((entry, i) => (
-              <motion.div
-                key={entry.address}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className={`px-6 py-3 grid grid-cols-4 gap-2 items-center border-b border-amber-100 last:border-0 ${
-                  i === 0 ? "bg-amber-50" : ""
-                }`}
-              >
-                <span className="font-extrabold text-lg" style={{ fontFamily: "'Fredoka One', cursive" }}>
-                  {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
-                </span>
-                <span className="font-mono text-sm text-amber-800 col-span-2 truncate">
-                  {formatAddress(entry.address)}
-                </span>
-                <span className="text-right font-bold text-amber-700">
-                  {entry.total.toLocaleString()} Ð
-                </span>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-      )}
+            <motion.div
+              className="doge-card p-8 max-w-md w-full space-y-6"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-2xl font-bold text-amber-800" style={{ fontFamily: "'Fredoka One', cursive" }}>
+                Withdraw DOGE
+              </h3>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-amber-800 font-bold text-sm mb-1">Amount (Ð)</label>
+                  <input
+                    type="number"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    placeholder={`${WITHDRAWAL_MIN} - ${WITHDRAWAL_MAX}`}
+                    step="0.0001"
+                    className="w-full px-4 py-2 rounded-lg border-2 border-amber-300 bg-amber-50 text-amber-900 focus:outline-none focus:border-amber-500"
+                  />
+                  <p className="text-xs text-amber-500 mt-1">Min: {WITHDRAWAL_MIN} Ð | Max: {WITHDRAWAL_MAX} Ð</p>
+                </div>
+
+                <div>
+                  <label className="block text-amber-800 font-bold text-sm mb-1">Dogecoin Address</label>
+                  <input
+                    type="text"
+                    value={withdrawAddress}
+                    onChange={(e) => setWithdrawAddress(e.target.value)}
+                    placeholder="D7xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    className="w-full px-4 py-2 rounded-lg border-2 border-amber-300 bg-amber-50 text-amber-900 font-mono text-sm focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <motion.button
+                  onClick={() => setShowWithdrawModal(false)}
+                  className="flex-1 py-2 bg-gray-300 text-gray-800 font-bold rounded-lg hover:bg-gray-400 transition"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  onClick={handleWithdraw}
+                  className="flex-1 doge-btn-primary py-2"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  Withdraw
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Footer ── */}
       <footer className="border-t-2 border-amber-200 bg-amber-50/80 py-6 text-center">
@@ -518,7 +591,7 @@ export default function Home() {
           🐕 Doge Faucet — Such free. Very DOGE. Wow.
         </p>
         <p className="text-amber-400 text-xs mt-1">
-          This is a simulated faucet for demonstration purposes. No real DOGE is distributed.
+          Powered by FaucetPay • Withdrawal: Once per week • Min: {WITHDRAWAL_MIN} Ð | Max: {WITHDRAWAL_MAX} Ð
         </p>
       </footer>
     </div>
