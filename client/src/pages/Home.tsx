@@ -551,31 +551,31 @@ export default function Home() {
               task={{
                 id: "watch-ad",
                 title: "Watch Ad",
-                reward: 0.00010438,
+                reward: 0.000104,
                 action: "Watch Now",
                 link: "https://www.profitablecpmratenetwork.com/av12w48skm?key=a016e34186f663eaef12ef74f4622d62",
               }}
-              onComplete={() => handleTaskComplete(0.00010438)}
+              onComplete={() => handleTaskComplete(0.000104)}
             />
             <TaskCard
               task={{
                 id: "visit-site",
                 title: "Visit Website",
-                reward: 0.00010329,
+                reward: 0.000103,
                 action: "Visit",
                 link: "https://www.profitablecpmratenetwork.com/av12w48skm?key=a016e34186f663eaef12ef74f4622d62",
               }}
-              onComplete={() => handleTaskComplete(0.00010329)}
+              onComplete={() => handleTaskComplete(0.000103)}
             />
             <TaskCard
               task={{
                 id: "survey",
                 title: "Complete Survey",
-                reward: 0.00010232,
+                reward: 0.000102,
                 action: "Start Survey",
                 link: "https://www.profitablecpmratenetwork.com/av12w48skm?key=a016e34186f663eaef12ef74f4622d62",
               }}
-              onComplete={() => handleTaskComplete(0.00010232)}
+              onComplete={() => handleTaskComplete(0.000102)}
             />
           </div>
         </section>
@@ -623,6 +623,13 @@ export default function Home() {
           </motion.button>
         </div>
       </section>
+
+      {/* ── Ad Space 5 (Native Banner) ── */}
+      <div className="container py-4">
+        <div className="w-full flex justify-center">
+          <div id="container-0ee654d9e26c67d753bcd60504761f2b"></div>
+        </div>
+      </div>
 
       {/* ── Homepage Widget Download ── */}
       <section className="container py-8 bg-amber-50 rounded-lg border-2 border-amber-200 p-6">
