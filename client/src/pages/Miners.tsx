@@ -21,15 +21,15 @@ export default function Miners() {
 
   // Purchase miner mutation
   const purchaseMutation = trpc.miners.purchase.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       if (data.success) {
-        toast.success(data.message);
+        toast.success(data.message || 'Miner purchased');
         // Refetch miners
         if (walletAddress) {
           getUserMinersQuery.refetch();
         }
       } else {
-        toast.error(data.error);
+        toast.error(data.error || 'Purchase failed');
       }
     },
   });

@@ -94,3 +94,38 @@ export const miners = mysqlTable("miners", {
 
 export type Miner = typeof miners.$inferSelect;
 export type InsertMiner = typeof miners.$inferInsert;
+
+/**
+ * Mining sessions - tracks active mining periods with 12-hour windows
+ */
+export const miningSessions = mysqlTable("mining_sessions", {
+  id: int("id").autoincrement().primaryKey(),
+  dogeAddress: varchar("dogeAddress", { length: 34 }).notNull(),
+  sessionStartAt: timestamp("sessionStartAt").defaultNow().notNull(),
+  sessionExpiresAt: timestamp("sessionExpiresAt").notNull(),
+  miningRate: varchar("miningRate", { length: 32 }).notNull(),
+  totalMined: varchar("totalMined", { length: 32 }).default("0").notNull(),
+  isActive: int("isActive").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MiningSession = typeof miningSessions.$inferSelect;
+export type InsertMiningSession = typeof miningSessions.$inferInsert;
+
+/**
+ * Miner tier upgrades - tracks upgraded miners with power multipliers
+ */
+export const minerUpgrades = mysqlTable("miner_upgrades", {
+  id: int("id").autoincrement().primaryKey(),
+  dogeAddress: varchar("dogeAddress", { length: 34 }).notNull(),
+  minerId: int("minerId").notNull(),
+  fromTier: mysqlEnum("fromTier", ["basic", "standard", "premium", "elite"]).notNull(),
+  toTier: mysqlEnum("toTier", ["basic", "standard", "premium", "elite"]).notNull(),
+  powerMultiplier: varchar("powerMultiplier", { length: 32 }).default("3").notNull(),
+  upgradeCost: varchar("upgradeCost", { length: 32 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MinerUpgrade = typeof minerUpgrades.$inferSelect;
+export type InsertMinerUpgrade = typeof minerUpgrades.$inferInsert;

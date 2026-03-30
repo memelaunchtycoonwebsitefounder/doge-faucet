@@ -5,6 +5,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import { sendDogePayout, verifyFaucetPayConnection } from "./faucetpay";
 import { getLeaderboard, getUserReferralStats, getOrCreateUserStats } from "./faucet-helpers";
 import { purchaseMiner, getUserMiners, collectMinerIncome, getTotalPassiveIncomePerHour, MINER_TYPES } from "./miners-helpers";
+import { startMiningSession, getMiningStatus, claimMiningRewards, upgradeMiner } from "./mining-dashboard";
 import { z } from "zod";
 
 export const appRouter = router({
@@ -21,159 +22,105 @@ export const appRouter = router({
     }),
   }),
 
-  // Faucet operations with FaucetPay integration
   faucet: router({
-    // Claim DOGE - sends payout via FaucetPay
     claim: publicProcedure
-      .input(z.object({
-        address: z.string().startsWith("D").length(34, "Invalid Dogecoin address"),
-        amount: z.number().min(0.0021).max(0.0023),
-      }))
+      .input(z.object({ address: z.string().startsWith("D").length(34) }))
       .mutation(async ({ input }) => {
         try {
-          const result = await sendDogePayout(
-            input.address,
-            input.amount,
-            "Doge Faucet Claim Reward"
-          );
-
-          if (!result.success) {
-            return {
-              success: false,
-              error: result.error || "Failed to process claim",
-              transactionId: null,
-            };
-          }
-
+          const amountNum = Math.random() * (0.0023 - 0.0021) + 0.0021;
+          const amount = amountNum.toFixed(8);
+          const result = await sendDogePayout(input.address, parseFloat(amount));
           return {
-            success: true,
-            amount: input.amount,
-            transactionId: result.transaction_id,
-            message: `Successfully claimed ${input.amount} DOGE!`,
+            success: result.success,
+            amount,
+            message: result.success ? `Claimed ${amount} DOGE!` : "Claim failed",
           };
-        } catch (error) {
-          console.error("[Claim] Error:", error);
+        } catch (error: any) {
           return {
             success: false,
-            error: "Internal server error",
-            transactionId: null,
+            error: error.message || "Failed to claim",
+            amount: "0",
           };
         }
       }),
 
-    // Complete task - sends task reward via FaucetPay
     completeTask: publicProcedure
-      .input(z.object({
-        address: z.string().startsWith("D").length(34, "Invalid Dogecoin address"),
-        taskId: z.enum(["watch-ad", "visit-site", "survey", "extra-reward"]),
-        amount: z.number().min(0.000102).max(0.001499),
-      }))
+      .input(z.object({ address: z.string().startsWith("D").length(34), taskType: z.string() }))
       .mutation(async ({ input }) => {
-        const taskNames: Record<string, string> = {
-          "watch-ad": "Watch Ad Task",
-          "visit-site": "Visit Website Task",
-          "survey": "Survey Task",
-          "extra-reward": "Extra Reward",
-        };
-
         try {
-          const result = await sendDogePayout(
-            input.address,
-            input.amount,
-            `Doge Faucet - ${taskNames[input.taskId]}`
-          );
-
-          if (!result.success) {
-            return {
-              success: false,
-              error: result.error || "Failed to complete task",
-              transactionId: null,
-            };
-          }
-
-          return {
-            success: true,
-            amount: input.amount,
-            transactionId: result.transaction_id,
-            message: `Task completed! Earned ${input.amount} DOGE`,
+          const rewards: Record<string, string> = {
+            watch: "0.000104",
+            visit: "0.000103",
+            survey: "0.000102",
           };
-        } catch (error) {
-          console.error("[Task] Error:", error);
+          const amount = rewards[input.taskType] || "0.0001";
+          const result = await sendDogePayout(input.address, parseFloat(amount));
+          return {
+            success: result.success,
+            amount,
+            message: result.success ? `Earned ${amount} DOGE!` : "Task failed",
+          };
+        } catch (error: any) {
           return {
             success: false,
-            error: "Internal server error",
-            transactionId: null,
+            error: error.message || "Failed to complete task",
+            amount: "0",
           };
         }
       }),
 
-    // Withdraw DOGE - sends withdrawal via FaucetPay
     withdraw: publicProcedure
-      .input(z.object({
-        address: z.string().startsWith("D").length(34, "Invalid Dogecoin address"),
-        amount: z.number().min(0.1).max(1.0),
-      }))
+      .input(z.object({ address: z.string().startsWith("D").length(34), amount: z.string() }))
       .mutation(async ({ input }) => {
         try {
-          const result = await sendDogePayout(
-            input.address,
-            input.amount,
-            "Doge Faucet Withdrawal"
-          );
-
-          if (!result.success) {
-            return {
-              success: false,
-              error: result.error || "Withdrawal failed",
-              transactionId: null,
-            };
-          }
-
+          const result = await sendDogePayout(input.address, parseFloat(input.amount));
           return {
-            success: true,
-            amount: input.amount,
-            transactionId: result.transaction_id,
-            message: `Withdrawal of ${input.amount} DOGE processed!`,
+            success: result.success,
+            message: result.success ? "Withdrawal pending" : "Withdrawal failed",
           };
-        } catch (error) {
-          console.error("[Withdrawal] Error:", error);
+        } catch (error: any) {
           return {
             success: false,
-            error: "Internal server error",
-            transactionId: null,
+            error: error.message || "Failed to withdraw",
           };
         }
       }),
 
-    // Check FaucetPay connection status
-    status: publicProcedure.query(async () => {
-      const isConnected = await verifyFaucetPayConnection();
-      return {
-        connected: isConnected,
-        message: isConnected ? "FaucetPay connected" : "FaucetPay offline",
-      };
-    }),
+    status: publicProcedure
+      .input(z.object({ address: z.string().startsWith("D").length(34) }))
+      .query(async ({ input }) => {
+        try {
+          const stats = await getOrCreateUserStats(input.address);
+          return {
+            success: true,
+            data: stats,
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: "Failed to fetch status",
+            data: null,
+          };
+        }
+      }),
   }),
 
   stats: router({
     leaderboard: publicProcedure
-      .input(z.object({ limit: z.number().min(1).max(100).default(50) }).optional())
+      .input(z.object({ limit: z.number().default(50) }))
       .query(async ({ input }) => {
         try {
-          const leaderboard = await getLeaderboard(input?.limit || 50);
+          const leaderboard = await getLeaderboard(input.limit);
           return {
             success: true,
-            data: leaderboard.map((user, idx) => ({
-              rank: idx + 1,
-              address: user.dogeAddress,
-              totalEarned: user.totalEarned,
-              referralEarnings: user.referralEarnings,
-              currentStreak: user.currentStreak,
-              maxStreak: user.maxStreak,
-            })),
+            data: leaderboard,
           };
         } catch (error) {
-          return { success: false, error: "Failed to fetch leaderboard", data: [] };
+          return {
+            success: false,
+            error: "Failed to fetch leaderboard",
+            data: [],
+          };
         }
       }),
 
@@ -184,17 +131,14 @@ export const appRouter = router({
           const stats = await getOrCreateUserStats(input.address);
           return {
             success: true,
-            data: {
-              totalEarned: stats.totalEarned,
-              referralEarnings: stats.referralEarnings,
-              currentStreak: stats.currentStreak,
-              maxStreak: stats.maxStreak,
-              referralCount: stats.referralCount,
-              referralCode: stats.referralCode,
-            },
+            data: stats,
           };
         } catch (error) {
-          return { success: false, error: "Failed to fetch user stats", data: null };
+          return {
+            success: false,
+            error: "Failed to fetch user stats",
+            data: null,
+          };
         }
       }),
 
@@ -202,13 +146,17 @@ export const appRouter = router({
       .input(z.object({ address: z.string().startsWith("D").length(34) }))
       .query(async ({ input }) => {
         try {
-          const referralStats = await getUserReferralStats(input.address);
+          const referrals = await getUserReferralStats(input.address);
           return {
             success: true,
-            data: referralStats,
+            data: referrals,
           };
         } catch (error) {
-          return { success: false, error: "Failed to fetch referral stats", data: null };
+          return {
+            success: false,
+            error: "Failed to fetch referrals",
+            data: null,
+          };
         }
       }),
   }),
@@ -227,17 +175,11 @@ export const appRouter = router({
 
     // Purchase a miner
     purchase: publicProcedure
-      .input(z.object({
-        address: z.string().startsWith("D").length(34),
-        minerType: z.enum(["basic", "standard", "premium", "elite"]),
-      }))
+      .input(z.object({ address: z.string().startsWith("D").length(34), minerType: z.enum(["basic", "standard", "premium", "elite"]) }))
       .mutation(async ({ input }) => {
         try {
-          const result = await purchaseMiner(input.address, input.minerType);
-          return {
-            success: true,
-            message: result.message,
-          };
+          const result = await purchaseMiner(input.address, input.minerType as any);
+          return result;
         } catch (error: any) {
           return {
             success: false,
@@ -300,6 +242,74 @@ export const appRouter = router({
             success: false,
             error: "Failed to calculate income",
             incomePerHour: "0",
+          };
+        }
+      }),
+  }),
+
+  mining: router({
+    // Start a mining session
+    startSession: publicProcedure
+      .input(z.object({ address: z.string() }))
+      .mutation(async ({ input }) => {
+        try {
+          const result = await startMiningSession(input.address);
+          return result;
+        } catch (error: any) {
+          return {
+            success: false,
+            error: error.message || "Failed to start mining session",
+          };
+        }
+      }),
+
+    // Get mining status
+    getStatus: publicProcedure
+      .input(z.object({ address: z.string() }))
+      .query(async ({ input }) => {
+        try {
+          const status = await getMiningStatus(input.address);
+          return { success: true, data: status };
+        } catch (error) {
+          return {
+            success: false,
+            error: "Failed to fetch mining status",
+            data: null,
+          };
+        }
+      }),
+
+    // Claim mining rewards
+    claimRewards: publicProcedure
+      .input(z.object({ address: z.string() }))
+      .mutation(async ({ input }) => {
+        try {
+          const result = await claimMiningRewards(input.address);
+          return result;
+        } catch (error: any) {
+          return {
+            success: false,
+            error: error.message || "Failed to claim rewards",
+          };
+        }
+      }),
+
+    // Upgrade miner
+    upgradeMiner: publicProcedure
+      .input(z.object({
+        address: z.string(),
+        minerId: z.number(),
+        fromTier: z.enum(["basic", "standard", "premium", "elite"]),
+        toTier: z.enum(["basic", "standard", "premium", "elite"]),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          const result = await upgradeMiner(input.address, input.minerId, input.fromTier as any, input.toTier as any);
+          return result;
+        } catch (error: any) {
+          return {
+            success: false,
+            error: error.message || "Failed to upgrade miner",
           };
         }
       }),

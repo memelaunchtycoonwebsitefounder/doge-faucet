@@ -9,6 +9,7 @@ import Leaderboard from "./pages/Leaderboard";
 import Referrals from "./pages/Referrals";
 import Stats from "./pages/Stats";
 import Miners from "./pages/Miners";
+import MiningDashboard from "./pages/MiningDashboard";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -19,6 +20,7 @@ function Router() {
       <Route path={"/referrals"} component={Referrals} />
       <Route path={"/stats"} component={Stats} />
       <Route path={"/miners"} component={Miners} />
+      <Route path={"/mining-dashboard"} component={MiningDashboard} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
