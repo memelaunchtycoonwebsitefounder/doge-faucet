@@ -530,7 +530,7 @@ export default function Home() {
               task={{
                 id: "watch-ad",
                 title: "Watch Ad",
-                reward: getRandomTaskReward(),
+                reward: 0.00010438,
                 action: "Watch Now",
               }}
               onComplete={handleTaskComplete}
@@ -539,7 +539,7 @@ export default function Home() {
               task={{
                 id: "visit-site",
                 title: "Visit Website",
-                reward: getRandomTaskReward(),
+                reward: 0.00010329,
                 action: "Visit",
               }}
               onComplete={handleTaskComplete}
@@ -548,7 +548,7 @@ export default function Home() {
               task={{
                 id: "survey",
                 title: "Complete Survey",
-                reward: getRandomTaskReward(),
+                reward: 0.00010232,
                 action: "Start Survey",
               }}
               onComplete={handleTaskComplete}
@@ -559,12 +559,12 @@ export default function Home() {
 
       {/* ── Ad Space 4 (Smartlink Ads with Rewards) ── */}
       <section className="container py-8">
-        <h3
-          className="text-3xl text-amber-800 text-center mb-6"
-          style={{ fontFamily: "'Fredoka One', cursive" }}
-        >
-          💵 Complete Offers & Earn DOGE
-        </h3>
+          <h3
+            className="text-3xl text-amber-800 text-center mb-6"
+            style={{ fontFamily: "'Fredoka One', cursive" }}
+          >
+            💵 Smartlink Offers
+          </h3>
         <div className="grid sm:grid-cols-2 gap-4">
           <motion.button
             onClick={() => {
