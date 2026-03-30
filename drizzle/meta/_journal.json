@@ -8,6 +8,13 @@
       "when": 1774841375267,
       "tag": "0000_ancient_epoch",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1774890900030,
+      "tag": "0001_cuddly_chamber",
+      "breakpoints": true
     }
   ]
 }

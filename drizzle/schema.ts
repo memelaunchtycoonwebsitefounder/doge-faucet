@@ -25,4 +25,54 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
+/**
+ * Faucet user stats - tracks daily streaks, referrals, and earnings
+ */
+export const faucetUserStats = mysqlTable("faucet_user_stats", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Dogecoin address of the user */
+  dogeAddress: varchar("dogeAddress", { length: 34 }).notNull().unique(),
+  /** Current daily claim streak (consecutive days) */
+  currentStreak: int("currentStreak").default(0).notNull(),
+  /** Longest streak ever achieved */
+  maxStreak: int("maxStreak").default(0).notNull(),
+  /** Last claim timestamp */
+  lastClaimAt: timestamp("lastClaimAt"),
+  /** Total DOGE earned from claims */
+  totalEarned: varchar("totalEarned", { length: 32 }).default("0").notNull(),
+  /** Total DOGE earned from referrals */
+  referralEarnings: varchar("referralEarnings", { length: 32 }).default("0").notNull(),
+  /** Number of successful referrals */
+  referralCount: int("referralCount").default(0).notNull(),
+  /** Unique referral code for this user */
+  referralCode: varchar("referralCode", { length: 16 }).notNull().unique(),
+  /** Referrer's address (who referred this user) */
+  referrerAddress: varchar("referrerAddress", { length: 34 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FaucetUserStats = typeof faucetUserStats.$inferSelect;
+export type InsertFaucetUserStats = typeof faucetUserStats.$inferInsert;
+
+/**
+ * Referral tracking - records each successful referral
+ */
+export const referrals = mysqlTable("referrals", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Referrer's Dogecoin address */
+  referrerAddress: varchar("referrerAddress", { length: 34 }).notNull(),
+  /** Referred user's Dogecoin address */
+  referredAddress: varchar("referredAddress", { length: 34 }).notNull(),
+  /** Reward amount (0.0067 DOGE) */
+  rewardAmount: varchar("rewardAmount", { length: 32 }).default("0.0067").notNull(),
+  /** Whether the referral reward has been paid */
+  isPaid: int("isPaid").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  paidAt: timestamp("paidAt"),
+});
+
+export type Referral = typeof referrals.$inferSelect;
+export type InsertReferral = typeof referrals.$inferInsert;
+
 // TODO: Add your tables here
