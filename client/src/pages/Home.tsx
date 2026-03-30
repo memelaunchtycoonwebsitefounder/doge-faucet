@@ -274,10 +274,6 @@ export default function Home() {
       toast.warning("Please connect your wallet first to claim DOGE");
       return;
     }
-    if (!isAuthenticated) {
-      window.location.href = getLoginUrl();
-      return;
-    }
     if (cooldown > 0) {
       toast.warning(`such patience needed. wait ${formatTime(cooldown)} 🕐`);
       return;
@@ -366,36 +362,36 @@ export default function Home() {
       ))}
 
       {/* ── Header ── */}
-      <header className="w-full py-4 px-6 flex items-center justify-between border-b-2 border-amber-200 bg-amber-50/80 backdrop-blur-sm sticky top-0 z-30">
-        <div className="flex items-center gap-3">
+      <header className="w-full py-4 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-b-2 border-amber-200 bg-amber-50/80 backdrop-blur-sm sticky top-0 z-30">
+        <div className="flex items-center gap-2 sm:gap-3">
           <img
             src="https://d2xsxph8kpxj0f.cloudfront.net/310519663491267937/iGc5kShpm5eo43AqpGQqJn/doge-coin-spin-dEVktWSw49vAzExbbF729d.webp"
             alt="Doge coin"
-            className="w-10 h-10 animate-coin-bounce"
+            className="w-8 sm:w-10 h-8 sm:h-10 animate-coin-bounce"
           />
           <div>
-            <h1 className="text-2xl text-amber-800 leading-none" style={{ fontFamily: "'Fredoka One', cursive" }}>
+            <h1 className="text-lg sm:text-2xl text-amber-800 leading-none" style={{ fontFamily: "'Fredoka One', cursive" }}>
               Doge Faucet
             </h1>
             <p className="text-xs text-amber-600 font-semibold">Much free. Very DOGE.</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 bg-amber-100 border-2 border-amber-300 rounded-xl px-4 py-2">
-            <span className="text-amber-600 text-sm font-bold">Balance:</span>
-            <span className="text-amber-800 font-extrabold text-sm">
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2 bg-amber-100 border-2 border-amber-300 rounded-xl px-3 sm:px-4 py-2 w-full sm:w-auto justify-center">
+            <span className="text-amber-600 text-xs sm:text-sm font-bold">Balance:</span>
+            <span className="text-amber-800 font-extrabold text-sm sm:text-sm">
               {totalBalance.toFixed(4)} Ð
             </span>
           </div>
           {connectedWallet ? (
-            <div className="bg-green-100 border-2 border-green-400 rounded-xl px-3 py-2 text-center">
+            <div className="bg-green-100 border-2 border-green-400 rounded-xl px-3 py-2 text-center w-full sm:w-auto">
               <p className="text-xs text-green-600 font-bold">Wallet</p>
-              <p className="text-sm text-green-800 font-mono font-bold">{connectedWallet.slice(0, 6)}...{connectedWallet.slice(-4)}</p>
+              <p className="text-xs sm:text-sm text-green-800 font-mono font-bold">{connectedWallet.slice(0, 6)}...{connectedWallet.slice(-4)}</p>
             </div>
           ) : (
             <motion.button
               onClick={() => setShowWalletModal(true)}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 py-2 rounded-lg transition"
+              className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-3 sm:px-4 py-2 rounded-lg transition text-sm w-full sm:w-auto"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
