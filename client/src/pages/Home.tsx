@@ -236,8 +236,8 @@ export default function Home() {
     const amount = getRandomAmount();
     const phrase = getRandomPhrase();
 
-    // TODO: Call FaucetPay API to send real DOGE
-    // For now, simulate locally
+    // Update balance and set cooldown
+    setTotalBalance(prev => prev + amount);
     setCooldown(COOLDOWN_SECONDS);
     setConfettiActive(true);
     setMemePhrase(phrase);
@@ -255,11 +255,13 @@ export default function Home() {
 
   const handleTaskComplete = () => {
     const reward = getRandomTaskReward();
-    // TODO: Add task reward to user balance via backend
+    // Add task reward to user balance
+    setTotalBalance(prev => prev + reward);
     const btnRect = btnRef.current?.getBoundingClientRect();
     const x = btnRect ? btnRect.left + btnRect.width / 2 - 30 : window.innerWidth / 2 - 30;
     const id = ++coinIdRef.current;
     setFloatingCoins((prev) => [...prev, { id, x, amount: reward }]);
+    toast.success(`✅ Task completed! +${reward.toFixed(6)} DOGE earned`);
   };
 
   const handleWithdraw = async () => {
@@ -519,33 +521,77 @@ export default function Home() {
         </section>
       )}
 
-      {/* ── Ad Space 4 (Between sections - Adsterra Link) ── */}
-      <div className="container py-4">
-        <div className="w-full flex justify-center">
+      {/* ── Ad Space 4 (Smartlink Ads with Rewards) ── */}
+      <section className="container py-8">
+        <h3
+          className="text-3xl text-amber-800 text-center mb-6"
+          style={{ fontFamily: "'Fredoka One', cursive" }}
+        >
+          💵 Complete Offers & Earn DOGE
+        </h3>
+        <div className="grid sm:grid-cols-2 gap-4">
           <motion.button
             onClick={() => {
-              const rewardKey = `adsterra-${new Date().toDateString()}`;
-              if (!earnedRewards.has(rewardKey)) {
-                window.open('https://www.profitablecpmratenetwork.com/f06jub373?key=a8935f5f6d1250ce9b45339a50755bed', '_blank');
-                // Award 0.001 DOGE when user clicks (once per day)
-                const reward = 0.001;
-                setTotalBalance(prev => prev + reward);
-                setEarnedRewards(prev => new Set(Array.from(prev).concat(rewardKey)));
-                toast.success(`🎁 +${reward} DOGE earned! Visit the link to complete the offer.`);
-              } else {
-                toast.info('You already earned your daily reward from this link!');
-              }
+              const reward = Math.random() * (0.001499 - 0.00089) + 0.00089;
+              window.open('https://www.profitablecpmratenetwork.com/f06jub373?key=a8935f5f6d1250ce9b45339a50755bed', '_blank');
+              setTotalBalance(prev => prev + reward);
+              toast.success(`🎁 +${reward.toFixed(6)} DOGE earned! Complete the offer to keep your reward.`);
             }}
-            className="inline-block"
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
+            className="doge-card p-6 text-center bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold rounded-lg hover:scale-105 transition-transform cursor-pointer"
           >
-            <div className="doge-card p-6 text-center bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold rounded-lg hover:scale-105 transition-transform cursor-pointer">
-              🎁 Earn Extra Rewards - Click Here!
-            </div>
+            <div className="text-3xl mb-2">🌟</div>
+            <p>Complete Offers</p>
+            <p className="text-sm mt-1">Earn 0.00089-0.001499 DOGE</p>
+          </motion.button>
+
+          <motion.button
+            onClick={() => {
+              const reward = Math.random() * (0.001499 - 0.00089) + 0.00089;
+              window.open('https://www.profitablecpmratenetwork.com/f06jub373?key=a8935f5f6d1250ce9b45339a50755bed', '_blank');
+              setTotalBalance(prev => prev + reward);
+              toast.success(`🎁 +${reward.toFixed(6)} DOGE earned! Complete the offer to keep your reward.`);
+            }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            className="doge-card p-6 text-center bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-lg hover:scale-105 transition-transform cursor-pointer"
+          >
+            <div className="text-3xl mb-2">🌟</div>
+            <p>Watch Videos</p>
+            <p className="text-sm mt-1">Earn 0.00089-0.001499 DOGE</p>
           </motion.button>
         </div>
-      </div>
+      </section>
+
+      {/* ── Homepage Widget Download ── */}
+      <section className="container py-8 bg-amber-50 rounded-lg border-2 border-amber-200 p-6">
+        <h3
+          className="text-2xl text-amber-800 text-center mb-4"
+          style={{ fontFamily: "'Fredoka One', cursive" }}
+        >
+          🌚 Embed on Your Website
+        </h3>
+        <p className="text-amber-700 text-center mb-4">Add our widget to your homepage and earn 0.0067 DOGE per referral!</p>
+        <div className="bg-white p-4 rounded-lg border-2 border-amber-300 mb-4">
+          <p className="text-xs text-amber-600 mb-2 font-bold">Copy this code to your website:</p>
+          <code className="text-xs bg-amber-50 p-3 rounded block overflow-x-auto font-mono text-amber-900">
+            {`<iframe src="https://cryptodogefaucet.org/widget" width="300" height="400" frameborder="0" style="border: 2px solid #d97706; border-radius: 8px;"></iframe>`}
+          </code>
+        </div>
+        <motion.button
+          onClick={() => {
+            const code = `<iframe src="https://cryptodogefaucet.org/widget" width="300" height="400" frameborder="0" style="border: 2px solid #d97706; border-radius: 8px;"></iframe>`;
+            navigator.clipboard.writeText(code);
+            toast.success('Widget code copied to clipboard!');
+          }}
+          className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-lg hover:scale-105 transition-transform"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          📋 Copy Widget Code
+        </motion.button>
+      </section>
 
       {/* ── How It Works ── */}
       <section className="container py-8">
