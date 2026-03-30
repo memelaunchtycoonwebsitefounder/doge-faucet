@@ -413,6 +413,9 @@ export default function Home() {
             <button onClick={() => navigate("/stats")} className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-blue-400 text-white rounded-lg hover:bg-blue-500 transition font-bold">
               📊 Stats
             </button>
+            <button onClick={() => navigate("/mining-dashboard")} className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition font-bold">
+              ⛏️ Mining
+            </button>
           </div>
           <div className="flex items-center gap-2 bg-amber-100 border-2 border-amber-300 rounded-xl px-3 sm:px-4 py-2 w-full sm:w-auto justify-center">
             <span className="text-amber-600 text-xs sm:text-sm font-bold">Balance:</span>
