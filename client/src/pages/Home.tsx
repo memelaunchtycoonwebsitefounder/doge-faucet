@@ -192,6 +192,29 @@ function TaskCard({ task, onComplete }: { task: { id: string; title: string; rew
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const [quoteIdx, setQuoteIdx] = useState(0);
+
+  // SEO: Set page title and meta tags
+  useEffect(() => {
+    document.title = "Crypto Doge Faucet - Free DOGE Rewards | Claim Every 6 Hours";
+    
+    // Set meta description
+    let metaDescription = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    if (!metaDescription) {
+      metaDescription = document.createElement('meta') as HTMLMetaElement;
+      metaDescription.name = 'description';
+      document.head.appendChild(metaDescription);
+    }
+    metaDescription.content = 'Crypto Doge Faucet - Earn free DOGE by claiming every 6 hours, completing tasks, and watching ads. Withdraw with low minimum (0.1 DOGE). Join now!';
+    
+    // Set meta keywords
+    let metaKeywords = document.querySelector('meta[name="keywords"]') as HTMLMetaElement | null;
+    if (!metaKeywords) {
+      metaKeywords = document.createElement('meta') as HTMLMetaElement;
+      metaKeywords.name = 'keywords';
+      document.head.appendChild(metaKeywords);
+    }
+    metaKeywords.content = 'doge faucet, free doge, earn dogecoin, crypto faucet, dogecoin rewards, free cryptocurrency, doge rewards, dogecoin faucet';
+  }, []);
   const [memePhrase, setMemePhrase] = useState("");
   const [showMeme, setShowMeme] = useState(false);
   const [confettiActive, setConfettiActive] = useState(false);
