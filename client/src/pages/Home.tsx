@@ -28,9 +28,7 @@ if (typeof window !== 'undefined') {
   script2.src = 'https://pl29014555.profitablecpmratenetwork.com/17/8e/40/178e4091eddcb131be13ce883019531d.js';
   document.head.appendChild(script2);
 
-  const script3 = document.createElement('script');
-  script3.src = 'https://pl29014557.profitablecpmratenetwork.com/ca/c6/f4/cac6f4ed784dcc38f734d31b268d344f.js';
-  document.head.appendChild(script3);
+
 
   // Banner 468x60 ad
   const bannerScript = document.createElement('script');
