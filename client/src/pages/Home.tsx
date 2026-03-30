@@ -198,6 +198,8 @@ export default function Home() {
   const [withdrawAddress, setWithdrawAddress] = useState("");
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawalPending, setWithdrawalPending] = useState(false);
+  const [totalBalance, setTotalBalance] = useState(0);
+  const [earnedRewards, setEarnedRewards] = useState<Set<string>>(new Set());
   const coinIdRef = useRef(0);
   const btnRef = useRef<HTMLButtonElement>(null);
 
@@ -261,9 +263,19 @@ export default function Home() {
   };
 
   const handleWithdraw = async () => {
+    // Check if user has enough balance
+    if (totalBalance < WITHDRAWAL_MIN) {
+      toast.error("You do not have enough DOGE to withdraw");
+      return;
+    }
+
     const amount = parseFloat(withdrawAmount);
     if (isNaN(amount) || amount < WITHDRAWAL_MIN || amount > WITHDRAWAL_MAX) {
       toast.error(`Withdrawal must be between ${WITHDRAWAL_MIN} and ${WITHDRAWAL_MAX} DOGE`);
+      return;
+    }
+    if (amount > totalBalance) {
+      toast.error("You do not have enough DOGE to withdraw");
       return;
     }
     if (!withdrawAddress.trim()) {
@@ -510,11 +522,28 @@ export default function Home() {
       {/* ── Ad Space 4 (Between sections - Adsterra Link) ── */}
       <div className="container py-4">
         <div className="w-full flex justify-center">
-          <a href="https://www.profitablecpmratenetwork.com/f06jub373?key=a8935f5f6d1250ce9b45339a50755bed" target="_blank" rel="noopener noreferrer" className="inline-block">
-            <div className="doge-card p-6 text-center bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold rounded-lg hover:scale-105 transition-transform">
+          <motion.button
+            onClick={() => {
+              const rewardKey = `adsterra-${new Date().toDateString()}`;
+              if (!earnedRewards.has(rewardKey)) {
+                window.open('https://www.profitablecpmratenetwork.com/f06jub373?key=a8935f5f6d1250ce9b45339a50755bed', '_blank');
+                // Award 0.001 DOGE when user clicks (once per day)
+                const reward = 0.001;
+                setTotalBalance(prev => prev + reward);
+                setEarnedRewards(prev => new Set(Array.from(prev).concat(rewardKey)));
+                toast.success(`🎁 +${reward} DOGE earned! Visit the link to complete the offer.`);
+              } else {
+                toast.info('You already earned your daily reward from this link!');
+              }
+            }}
+            className="inline-block"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            <div className="doge-card p-6 text-center bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold rounded-lg hover:scale-105 transition-transform cursor-pointer">
               🎁 Earn Extra Rewards - Click Here!
             </div>
-          </a>
+          </motion.button>
         </div>
       </div>
 
@@ -579,31 +608,41 @@ export default function Home() {
                 Withdraw DOGE
               </h3>
 
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-amber-800 font-bold text-sm mb-1">Amount (Ð)</label>
-                  <input
-                    type="number"
-                    value={withdrawAmount}
-                    onChange={(e) => setWithdrawAmount(e.target.value)}
-                    placeholder={`${WITHDRAWAL_MIN} - ${WITHDRAWAL_MAX}`}
-                    step="0.0001"
-                    className="w-full px-4 py-2 rounded-lg border-2 border-amber-300 bg-amber-50 text-amber-900 focus:outline-none focus:border-amber-500"
-                  />
-                  <p className="text-xs text-amber-500 mt-1">Min: {WITHDRAWAL_MIN} Ð | Max: {WITHDRAWAL_MAX} Ð</p>
+              {totalBalance < WITHDRAWAL_MIN ? (
+                <div className="bg-red-100 border-2 border-red-400 rounded-lg p-4 text-center">
+                  <p className="text-red-700 font-bold">❌ You do not have enough DOGE to withdraw</p>
+                  <p className="text-red-600 text-sm mt-2">Current balance: {totalBalance.toFixed(8)} Ð</p>
+                  <p className="text-red-600 text-sm">Minimum required: {WITHDRAWAL_MIN} Ð</p>
                 </div>
+              ) : (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-amber-800 font-bold text-sm mb-1">Your Balance: {totalBalance.toFixed(8)} Ð</label>
+                    <label className="block text-amber-800 font-bold text-sm mb-1">Amount (Ð)</label>
+                    <input
+                      type="number"
+                      value={withdrawAmount}
+                      onChange={(e) => setWithdrawAmount(e.target.value)}
+                      placeholder={`${WITHDRAWAL_MIN} - ${WITHDRAWAL_MAX}`}
+                      step="0.0001"
+                      max={Math.min(totalBalance, WITHDRAWAL_MAX)}
+                      className="w-full px-4 py-2 rounded-lg border-2 border-amber-300 bg-amber-50 text-amber-900 focus:outline-none focus:border-amber-500"
+                    />
+                    <p className="text-xs text-amber-500 mt-1">Min: {WITHDRAWAL_MIN} Ð | Max: {Math.min(totalBalance, WITHDRAWAL_MAX)} Ð</p>
+                  </div>
 
-                <div>
-                  <label className="block text-amber-800 font-bold text-sm mb-1">Dogecoin Address</label>
-                  <input
-                    type="text"
-                    value={withdrawAddress}
-                    onChange={(e) => setWithdrawAddress(e.target.value)}
-                    placeholder="D7xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                    className="w-full px-4 py-2 rounded-lg border-2 border-amber-300 bg-amber-50 text-amber-900 font-mono text-sm focus:outline-none focus:border-amber-500"
-                  />
+                  <div>
+                    <label className="block text-amber-800 font-bold text-sm mb-1">Dogecoin Address</label>
+                    <input
+                      type="text"
+                      value={withdrawAddress}
+                      onChange={(e) => setWithdrawAddress(e.target.value)}
+                      placeholder="D7xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                      className="w-full px-4 py-2 rounded-lg border-2 border-amber-300 bg-amber-50 text-amber-900 font-mono text-sm focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="flex gap-3">
                 <motion.button
