@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { loadMultiplePopunders } from "@/lib/popunder";
+import { trpc } from "@/lib/trpc";
 
 export default function Referrals() {
   const [, navigate] = useLocation();
@@ -11,23 +12,34 @@ export default function Referrals() {
   const [referralCount, setReferralCount] = useState(0);
   const [referralEarnings, setReferralEarnings] = useState("0.0000");
   const [recentReferrals, setRecentReferrals] = useState<any[]>([]);
+  const [userAddress, setUserAddress] = useState("");
+
+  const { data: referralData } = trpc.stats.referrals.useQuery(
+    { address: userAddress },
+    { enabled: !!userAddress }
+  );
 
   useEffect(() => {
-    // Load pop-unders on page visit
     loadMultiplePopunders(2, 5000);
+  }, []);
 
-    // Generate referral link
+  useEffect(() => {
+    const saved = localStorage.getItem("doge_address");
+    if (saved) setUserAddress(saved);
+  }, []);
+
+  useEffect(() => {
+    if (referralData?.success && referralData.data) {
+      setReferralCode(referralData.data.referralCode);
+      setReferralCount(referralData.data.referralCount);
+      setReferralEarnings(referralData.data.referralEarnings);
+      setRecentReferrals(referralData.data.recentReferrals || []);
+    }
+  }, [referralData]);
+
+  useEffect(() => {
     const link = `${window.location.origin}/?ref=${referralCode}`;
     setReferralLink(link);
-
-    // Simulate referral data
-    setReferralCount(12);
-    setReferralEarnings("0.0804");
-    setRecentReferrals([
-      { address: "D7a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5", earnedAt: "2 hours ago" },
-      { address: "D8b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6", earnedAt: "5 hours ago" },
-      { address: "D9c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7", earnedAt: "1 day ago" },
-    ]);
   }, [referralCode]);
 
   const copyToClipboard = (text: string, label: string) => {
@@ -36,6 +48,14 @@ export default function Referrals() {
   };
 
   const formatAddress = (addr: string) => addr.slice(0, 6) + "..." + addr.slice(-4);
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://pl29014556.profitablecpmratenetwork.com/0ee654d9e26c67d753bcd60504761f2b/invoke.js';
+    script.async = true;
+    script.setAttribute('data-cfasync', 'false');
+    document.body.appendChild(script);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-100 py-8">
@@ -61,6 +81,13 @@ export default function Referrals() {
         </button>
       </div>
 
+      {/* Native Banner Ad */}
+      <div className="container mb-6">
+        <div className="bg-white rounded-lg border-2 border-amber-300 p-4 shadow-lg">
+          <div id="container-0ee654d9e26c67d753bcd60504761f2b"></div>
+        </div>
+      </div>
+
       <div className="container">
         <h1
           className="text-4xl text-amber-800 text-center mb-8"
@@ -69,107 +96,89 @@ export default function Referrals() {
           🎁 My Referrals
         </h1>
 
-        {/* Referral Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="grid md:grid-cols-2 gap-6 mb-8"
-        >
-          <div className="bg-white rounded-lg border-2 border-amber-300 p-6 shadow-lg">
-            <p className="text-amber-700 text-sm font-bold mb-2">Total Referrals</p>
-            <p className="text-4xl font-bold text-amber-800">{referralCount}</p>
-            <p className="text-amber-600 text-sm mt-2">users referred</p>
-          </div>
-          <div className="bg-white rounded-lg border-2 border-orange-300 p-6 shadow-lg">
-            <p className="text-orange-700 text-sm font-bold mb-2">Referral Earnings</p>
-            <p className="text-4xl font-bold text-orange-800">{referralEarnings} Ð</p>
-            <p className="text-orange-600 text-sm mt-2">0.0067 DOGE per referral</p>
-          </div>
-        </motion.div>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-lg border-2 border-amber-300 p-6 shadow-lg"
+          >
+            <div className="text-sm text-amber-700 font-bold mb-2">Total Referrals</div>
+            <div className="text-4xl font-bold text-amber-600">{referralCount}</div>
+            <div className="text-xs text-amber-600 mt-2">Users invited</div>
+          </motion.div>
 
-        {/* Referral Code & Link */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-lg border-2 border-orange-300 p-6 shadow-lg"
+          >
+            <div className="text-sm text-orange-700 font-bold mb-2">Referral Earnings</div>
+            <div className="text-4xl font-bold text-orange-600">{referralEarnings} Ð</div>
+            <div className="text-xs text-orange-600 mt-2">Total earned</div>
+          </motion.div>
+        </div>
+
+        {/* Referral Code */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.2 }}
           className="bg-white rounded-lg border-2 border-amber-300 p-6 shadow-lg mb-8"
         >
-          <h2 className="text-2xl font-bold text-amber-800 mb-4">Share Your Referral Link</h2>
-
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-amber-700 font-bold mb-2">Your Referral Code:</p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={referralCode}
-                  readOnly
-                  className="flex-1 px-4 py-2 bg-amber-50 border-2 border-amber-300 rounded-lg font-mono text-amber-900"
-                />
-                <button
-                  onClick={() => copyToClipboard(referralCode, "Referral code")}
-                  className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition font-bold"
-                >
-                  Copy
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <p className="text-sm text-amber-700 font-bold mb-2">Your Referral Link:</p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={referralLink}
-                  readOnly
-                  className="flex-1 px-4 py-2 bg-amber-50 border-2 border-amber-300 rounded-lg font-mono text-sm text-amber-900 overflow-x-auto"
-                />
-                <button
-                  onClick={() => copyToClipboard(referralLink, "Referral link")}
-                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-bold whitespace-nowrap"
-                >
-                  Copy Link
-                </button>
-              </div>
-            </div>
+          <h2 className="text-xl font-bold text-amber-800 mb-4">Your Referral Code</h2>
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={referralCode}
+              readOnly
+              className="flex-1 px-4 py-2 bg-amber-50 border border-amber-300 rounded-lg font-mono text-sm"
+            />
+            <button
+              onClick={() => copyToClipboard(referralCode, "Referral Code")}
+              className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition font-bold"
+            >
+              Copy Code
+            </button>
           </div>
 
-          <p className="text-sm text-amber-600 mt-4">
-            💡 Share this link with friends. When they sign up using your code, you both earn 0.0067 DOGE!
-          </p>
+          <h2 className="text-xl font-bold text-amber-800 mb-4">Your Referral Link</h2>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={referralLink}
+              readOnly
+              className="flex-1 px-4 py-2 bg-amber-50 border border-amber-300 rounded-lg font-mono text-xs"
+            />
+            <button
+              onClick={() => copyToClipboard(referralLink, "Referral Link")}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-bold"
+            >
+              Copy Link
+            </button>
+          </div>
         </motion.div>
 
         {/* Recent Referrals */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.3 }}
           className="bg-white rounded-lg border-2 border-amber-300 p-6 shadow-lg"
         >
-          <h2 className="text-2xl font-bold text-amber-800 mb-4">Recent Referrals</h2>
-
+          <h2 className="text-xl font-bold text-amber-800 mb-4">Recent Referrals</h2>
           {recentReferrals.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {recentReferrals.map((ref, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200"
-                >
-                  <div>
-                    <p className="font-mono text-sm text-amber-900">{formatAddress(ref.address)}</p>
-                    <p className="text-xs text-amber-600">{ref.earnedAt}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-orange-600">+0.0067 Ð</p>
-                  </div>
-                </motion.div>
+                <div key={idx} className="flex justify-between items-center p-3 bg-amber-50 rounded-lg">
+                  <span className="font-mono text-sm">{formatAddress(ref.address)}</span>
+                  <span className="text-xs text-amber-600">{ref.earnedAt}</span>
+                </div>
               ))}
             </div>
           ) : (
-            <p className="text-amber-600 text-center py-6">No referrals yet. Share your link to get started!</p>
+            <div className="text-center text-amber-600 py-8">No referrals yet. Share your link!</div>
           )}
         </motion.div>
       </div>

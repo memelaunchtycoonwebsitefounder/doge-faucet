@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { loadMultiplePopunders } from "@/lib/popunder";
+import { trpc } from "@/lib/trpc";
 
 export default function Stats() {
   const [, navigate] = useLocation();
@@ -13,20 +14,47 @@ export default function Stats() {
     totalClaims: 0,
     tasksCompleted: 0,
   });
+  const [userAddress, setUserAddress] = useState("");
+
+  const { data: statsData } = trpc.stats.userStats.useQuery(
+    { address: userAddress },
+    { enabled: !!userAddress }
+  );
 
   useEffect(() => {
-    // Load pop-unders on page visit
     loadMultiplePopunders(2, 5000);
+  }, []);
 
-    // Simulate user stats
-    setStats({
-      totalEarned: "1.2345",
-      referralEarnings: "0.0804",
-      currentStreak: 15,
-      maxStreak: 28,
-      totalClaims: 45,
-      tasksCompleted: 87,
-    });
+  useEffect(() => {
+    const saved = localStorage.getItem("doge_address");
+    if (saved) setUserAddress(saved);
+  }, []);
+
+  useEffect(() => {
+    if (statsData?.success && statsData.data) {
+      setStats({
+        totalEarned: statsData.data.totalEarned,
+        referralEarnings: statsData.data.referralEarnings,
+        currentStreak: statsData.data.currentStreak,
+        maxStreak: statsData.data.maxStreak,
+        totalClaims: Math.floor(parseFloat(statsData.data.totalEarned) / 0.0022),
+        tasksCompleted: Math.floor(parseFloat(statsData.data.totalEarned) / 0.0001),
+      });
+    }
+  }, [statsData]);
+
+  const getStreakMultiplier = (streak: number) => {
+    if (streak >= 30) return "2.0x";
+    if (streak >= 7) return "1.5x";
+    return "1.0x";
+  };
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://pl29014556.profitablecpmratenetwork.com/0ee654d9e26c67d753bcd60504761f2b/invoke.js';
+    script.async = true;
+    script.setAttribute('data-cfasync', 'false');
+    document.body.appendChild(script);
   }, []);
 
   return (
@@ -53,6 +81,13 @@ export default function Stats() {
         </button>
       </div>
 
+      {/* Native Banner Ad */}
+      <div className="container mb-6">
+        <div className="bg-white rounded-lg border-2 border-amber-300 p-4 shadow-lg">
+          <div id="container-0ee654d9e26c67d753bcd60504761f2b"></div>
+        </div>
+      </div>
+
       <div className="container">
         <h1
           className="text-4xl text-amber-800 text-center mb-8"
@@ -65,24 +100,18 @@ export default function Stats() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid md:grid-cols-3 gap-6 mb-8"
+          className="bg-white rounded-lg border-2 border-amber-300 p-6 shadow-lg mb-8"
         >
-          <div className="bg-white rounded-lg border-2 border-amber-300 p-6 shadow-lg text-center">
-            <p className="text-amber-700 text-sm font-bold mb-2">Total Earned</p>
-            <p className="text-4xl font-bold text-amber-800">{stats.totalEarned}</p>
-            <p className="text-amber-600 text-sm mt-2">Ð from claims</p>
-          </div>
-          <div className="bg-white rounded-lg border-2 border-orange-300 p-6 shadow-lg text-center">
-            <p className="text-orange-700 text-sm font-bold mb-2">Referral Earnings</p>
-            <p className="text-4xl font-bold text-orange-800">{stats.referralEarnings}</p>
-            <p className="text-orange-600 text-sm mt-2">Ð from referrals</p>
-          </div>
-          <div className="bg-white rounded-lg border-2 border-yellow-300 p-6 shadow-lg text-center">
-            <p className="text-yellow-700 text-sm font-bold mb-2">Total Balance</p>
-            <p className="text-4xl font-bold text-yellow-800">
-              {(parseFloat(stats.totalEarned) + parseFloat(stats.referralEarnings)).toFixed(4)}
-            </p>
-            <p className="text-yellow-600 text-sm mt-2">Ð total</p>
+          <h2 className="text-2xl font-bold text-amber-800 mb-4">💰 Total Earnings</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-amber-50 p-4 rounded-lg">
+              <div className="text-sm text-amber-700 font-bold">From Claims</div>
+              <div className="text-3xl font-bold text-amber-600">{stats.totalEarned} Ð</div>
+            </div>
+            <div className="bg-orange-50 p-4 rounded-lg">
+              <div className="text-sm text-orange-700 font-bold">From Referrals</div>
+              <div className="text-3xl font-bold text-orange-600">{stats.referralEarnings} Ð</div>
+            </div>
           </div>
         </motion.div>
 
@@ -91,86 +120,65 @@ export default function Stats() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid md:grid-cols-2 gap-6 mb-8"
+          className="bg-white rounded-lg border-2 border-blue-300 p-6 shadow-lg mb-8"
         >
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border-2 border-blue-300 p-6 shadow-lg">
-            <h3 className="text-2xl font-bold text-blue-800 mb-4">🔥 Current Streak</h3>
-            <p className="text-5xl font-bold text-blue-600 mb-2">{stats.currentStreak}</p>
-            <p className="text-blue-700">consecutive days</p>
-            <div className="mt-4 p-3 bg-blue-200 rounded-lg">
-              <p className="text-sm text-blue-900">
-                {stats.currentStreak >= 7 && stats.currentStreak < 30
-                  ? "🎉 You're getting 1.5x multiplier!"
-                  : stats.currentStreak >= 30
-                  ? "🏆 You're getting 2x multiplier!"
-                  : "Keep claiming to build your streak!"}
-              </p>
+          <h2 className="text-2xl font-bold text-blue-800 mb-4">🔥 Streak Bonuses</h2>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="text-sm text-blue-700 font-bold">Current Streak</div>
+              <div className="text-3xl font-bold text-blue-600">{stats.currentStreak} days</div>
+            </div>
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <div className="text-sm text-purple-700 font-bold">Best Streak</div>
+              <div className="text-3xl font-bold text-purple-600">{stats.maxStreak} days</div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border-2 border-purple-300 p-6 shadow-lg">
-            <h3 className="text-2xl font-bold text-purple-800 mb-4">⭐ Best Streak</h3>
-            <p className="text-5xl font-bold text-purple-600 mb-2">{stats.maxStreak}</p>
-            <p className="text-purple-700">days (personal record)</p>
-            <div className="mt-4 p-3 bg-purple-200 rounded-lg">
-              <p className="text-sm text-purple-900">Keep it up! You can beat your record!</p>
+          <div className="bg-gradient-to-r from-blue-100 to-purple-100 p-4 rounded-lg">
+            <div className="text-sm font-bold text-blue-800 mb-2">Current Multiplier</div>
+            <div className="text-2xl font-bold text-blue-700">{getStreakMultiplier(stats.currentStreak)}</div>
+            <div className="text-xs text-blue-600 mt-2">
+              {stats.currentStreak >= 30
+                ? "🎉 Maximum multiplier unlocked!"
+                : stats.currentStreak >= 7
+                ? "✨ Keep claiming to reach 30 days for 2x multiplier!"
+                : "📈 Claim 7 days in a row for 1.5x multiplier!"}
             </div>
           </div>
         </motion.div>
 
-        {/* Activity Stats */}
+        {/* Activity Summary */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-lg border-2 border-amber-300 p-6 shadow-lg"
+          className="bg-white rounded-lg border-2 border-green-300 p-6 shadow-lg"
         >
-          <h2 className="text-2xl font-bold text-amber-800 mb-6">📈 Activity Summary</h2>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
-              <p className="text-amber-700 font-bold mb-2">Total Claims</p>
-              <p className="text-3xl font-bold text-amber-800">{stats.totalClaims}</p>
-              <p className="text-sm text-amber-600 mt-2">times claimed DOGE</p>
-            </div>
-
-            <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
-              <p className="text-orange-700 font-bold mb-2">Tasks Completed</p>
-              <p className="text-3xl font-bold text-orange-800">{stats.tasksCompleted}</p>
-              <p className="text-sm text-orange-600 mt-2">ads watched & surveys done</p>
-            </div>
-          </div>
-
-          {/* Progress to Milestones */}
-          <div className="mt-6 p-4 bg-gradient-to-r from-amber-100 to-orange-100 rounded-lg border-2 border-amber-300">
-            <h3 className="font-bold text-amber-800 mb-4">🎯 Milestones</h3>
-            <div className="space-y-3">
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm font-bold text-amber-700">Total Earned: 2 DOGE</span>
-                  <span className="text-sm text-amber-600">
-                    {((parseFloat(stats.totalEarned) / 2) * 100).toFixed(0)}%
-                  </span>
-                </div>
-                <div className="w-full bg-amber-200 rounded-full h-2">
-                  <div
-                    className="bg-amber-600 h-2 rounded-full transition-all"
-                    style={{ width: `${Math.min((parseFloat(stats.totalEarned) / 2) * 100, 100)}%` }}
-                  ></div>
-                </div>
+          <h2 className="text-2xl font-bold text-green-800 mb-4">📈 Activity Summary</h2>
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between mb-2">
+                <span className="font-bold text-green-800">Total Claims</span>
+                <span className="font-bold text-green-600">{stats.totalClaims}</span>
               </div>
+              <div className="w-full bg-green-200 rounded-full h-2">
+                <div
+                  className="bg-green-600 h-2 rounded-full transition-all"
+                  style={{ width: `${Math.min((stats.totalClaims / 100) * 100, 100)}%` }}
+                ></div>
+              </div>
+            </div>
 
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm font-bold text-orange-700">30-Day Streak</span>
-                  <span className="text-sm text-orange-600">{((stats.currentStreak / 30) * 100).toFixed(0)}%</span>
-                </div>
-                <div className="w-full bg-orange-200 rounded-full h-2">
-                  <div
-                    className="bg-orange-600 h-2 rounded-full transition-all"
-                    style={{ width: `${Math.min((stats.currentStreak / 30) * 100, 100)}%` }}
-                  ></div>
-                </div>
+            <div>
+              <div className="flex justify-between mb-2">
+                <span className="font-bold text-green-800">Tasks Completed</span>
+                <span className="font-bold text-green-600">{stats.tasksCompleted}</span>
+              </div>
+              <div className="w-full bg-green-200 rounded-full h-2">
+                <div
+                  className="bg-green-600 h-2 rounded-full transition-all"
+                  style={{ width: `${Math.min((stats.tasksCompleted / 200) * 100, 100)}%` }}
+                ></div>
               </div>
             </div>
           </div>

@@ -2,18 +2,26 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { loadMultiplePopunders } from "@/lib/popunder";
+import { trpc } from "@/lib/trpc";
 
 export default function Leaderboard() {
   const [, navigate] = useLocation();
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { data: leaderboardData, isLoading } = trpc.stats.leaderboard.useQuery({ limit: 50 });
 
   useEffect(() => {
     // Load pop-unders on page visit
     loadMultiplePopunders(2, 5000);
+  }, []);
 
-    // Simulate leaderboard data
-    const mockData = [
+  useEffect(() => {
+    if (leaderboardData?.success && leaderboardData.data) {
+      setLeaderboard(leaderboardData.data);
+      setLoading(false);
+    } else if (leaderboardData?.success === false) {
+      // Fallback to mock data if query fails
+      const mockData = [
       {
         rank: 1,
         address: "D7a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5",
@@ -54,13 +62,28 @@ export default function Leaderboard() {
         currentStreak: 15,
         maxStreak: 20,
       },
-    ];
+      ];
+      setLeaderboard(mockData);
+      setLoading(false);
+    }
+  }, [leaderboardData]);
 
-    setLeaderboard(mockData);
-    setLoading(false);
-  }, []);
+  useEffect(() => {
+    if (isLoading) {
+      setLoading(true);
+    }
+  }, [isLoading]);
 
   const formatAddress = (addr: string) => addr.slice(0, 6) + "..." + addr.slice(-4);
+
+  useEffect(() => {
+    // Load native banner ad script
+    const script = document.createElement('script');
+    script.src = 'https://pl29014556.profitablecpmratenetwork.com/0ee654d9e26c67d753bcd60504761f2b/invoke.js';
+    script.async = true;
+    script.setAttribute('data-cfasync', 'false');
+    document.body.appendChild(script);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-100 py-8">
@@ -84,6 +107,13 @@ export default function Leaderboard() {
         >
           My Stats
         </button>
+      </div>
+
+      {/* Native Banner Ad */}
+      <div className="container mb-6">
+        <div className="bg-white rounded-lg border-2 border-amber-300 p-4 shadow-lg">
+          <div id="container-0ee654d9e26c67d753bcd60504761f2b"></div>
+        </div>
       </div>
 
       <div className="container">

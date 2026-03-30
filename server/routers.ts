@@ -3,6 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { sendDogePayout, verifyFaucetPayConnection } from "./faucetpay";
+import { getLeaderboard, getUserReferralStats, getOrCreateUserStats } from "./faucet-helpers";
 import { z } from "zod";
 
 export const appRouter = router({
@@ -151,6 +152,64 @@ export const appRouter = router({
         message: isConnected ? "FaucetPay connected" : "FaucetPay offline",
       };
     }),
+  }),
+
+  stats: router({
+    leaderboard: publicProcedure
+      .input(z.object({ limit: z.number().min(1).max(100).default(50) }).optional())
+      .query(async ({ input }) => {
+        try {
+          const leaderboard = await getLeaderboard(input?.limit || 50);
+          return {
+            success: true,
+            data: leaderboard.map((user, idx) => ({
+              rank: idx + 1,
+              address: user.dogeAddress,
+              totalEarned: user.totalEarned,
+              referralEarnings: user.referralEarnings,
+              currentStreak: user.currentStreak,
+              maxStreak: user.maxStreak,
+            })),
+          };
+        } catch (error) {
+          return { success: false, error: "Failed to fetch leaderboard", data: [] };
+        }
+      }),
+
+    userStats: publicProcedure
+      .input(z.object({ address: z.string().startsWith("D").length(34) }))
+      .query(async ({ input }) => {
+        try {
+          const stats = await getOrCreateUserStats(input.address);
+          return {
+            success: true,
+            data: {
+              totalEarned: stats.totalEarned,
+              referralEarnings: stats.referralEarnings,
+              currentStreak: stats.currentStreak,
+              maxStreak: stats.maxStreak,
+              referralCount: stats.referralCount,
+              referralCode: stats.referralCode,
+            },
+          };
+        } catch (error) {
+          return { success: false, error: "Failed to fetch user stats", data: null };
+        }
+      }),
+
+    referrals: publicProcedure
+      .input(z.object({ address: z.string().startsWith("D").length(34) }))
+      .query(async ({ input }) => {
+        try {
+          const referralStats = await getUserReferralStats(input.address);
+          return {
+            success: true,
+            data: referralStats,
+          };
+        } catch (error) {
+          return { success: false, error: "Failed to fetch referral stats", data: null };
+        }
+      }),
   }),
 });
 

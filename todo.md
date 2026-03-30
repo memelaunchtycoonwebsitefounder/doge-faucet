@@ -37,3 +37,34 @@
 - [ ] Verify daily streak calculations
 - [ ] Verify referral tracking
 - [ ] Save checkpoint
+
+## Phase 7: Database Integration & Real Data
+- [ ] Wire referral system to real database queries
+- [ ] Wire streak bonuses to real database queries
+- [ ] Update Leaderboard page to show real user data
+- [ ] Update Stats page to show real user stats
+- [ ] Update Referrals page to show real referral data
+
+## Phase 8: Native Banner Ads
+- [ ] Add native banner to Home page
+- [ ] Add native banner to Leaderboard page
+- [ ] Add native banner to Referrals page
+- [ ] Add native banner to Stats page
+- [ ] Add native banner to Miners page (new)
+- [ ] Add native banner to Deposits page (new)
+
+## Phase 9: Miners Shop Page
+- [ ] Create Miners Shop page layout
+- [ ] Add miner purchase system with DOGE cost
+- [ ] Add miner types (Basic, Pro, Elite)
+- [ ] Add mining rewards calculation
+- [ ] Add active miners display
+- [ ] Add sell/liquidate miners feature
+
+## Phase 10: Deposits & Access Tiers
+- [ ] Create Deposits page layout
+- [ ] Add deposit system (lock DOGE for rewards)
+- [ ] Add access tier system (Bronze, Silver, Gold, Platinum)
+- [ ] Add tier benefits display
+- [ ] Add deposit withdrawal with penalties
+- [ ] Add tier-based reward multipliers
