@@ -152,16 +152,19 @@ function AdSpace({ id }: { id: string }) {
 }
 
 // ─── Task Card ────────────────────────────────────────────────
-function TaskCard({ task, onComplete }: { task: { id: string; title: string; reward: number; action: string }; onComplete: () => void }) {
+function TaskCard({ task, onComplete }: { task: { id: string; title: string; reward: number; action: string; link?: string }; onComplete: () => void }) {
   const [loading, setLoading] = useState(false);
 
   const handleTask = async () => {
     setLoading(true);
+    // Open link if provided
+    if (task.link) {
+      window.open(task.link, '_blank');
+    }
     // Simulate task completion (watch ad, visit site, etc.)
     await new Promise((r) => setTimeout(r, 1500));
     setLoading(false);
     onComplete();
-    toast.success(`🎉 +${task.reward.toFixed(6)} DOGE earned!`);
   };
 
   return (
@@ -260,7 +263,7 @@ export default function Home() {
     const amount = getRandomAmount();
     const phrase = getRandomPhrase();
 
-    // Update balance and set cooldown
+    // Update balance and set cooldown (only add once)
     setTotalBalance(prev => prev + amount);
     setCooldown(COOLDOWN_SECONDS);
     setConfettiActive(true);
@@ -277,9 +280,8 @@ export default function Home() {
     toast.success(`🎉 You claimed ${amount.toFixed(6)} DOGE! ${phrase}`);
   }, [isAuthenticated, cooldown]);
 
-  const handleTaskComplete = () => {
-    const reward = getRandomTaskReward();
-    // Add task reward to user balance
+  const handleTaskComplete = (reward: number) => {
+    // Add task reward to user balance (only add once)
     setTotalBalance(prev => prev + reward);
     const btnRect = btnRef.current?.getBoundingClientRect();
     const x = btnRect ? btnRect.left + btnRect.width / 2 - 30 : window.innerWidth / 2 - 30;
@@ -532,8 +534,9 @@ export default function Home() {
                 title: "Watch Ad",
                 reward: 0.00010438,
                 action: "Watch Now",
+                link: "https://www.profitablecpmratenetwork.com/av12w48skm?key=a016e34186f663eaef12ef74f4622d62",
               }}
-              onComplete={handleTaskComplete}
+              onComplete={() => handleTaskComplete(0.00010438)}
             />
             <TaskCard
               task={{
@@ -541,8 +544,9 @@ export default function Home() {
                 title: "Visit Website",
                 reward: 0.00010329,
                 action: "Visit",
+                link: "https://www.profitablecpmratenetwork.com/av12w48skm?key=a016e34186f663eaef12ef74f4622d62",
               }}
-              onComplete={handleTaskComplete}
+              onComplete={() => handleTaskComplete(0.00010329)}
             />
             <TaskCard
               task={{
@@ -550,8 +554,9 @@ export default function Home() {
                 title: "Complete Survey",
                 reward: 0.00010232,
                 action: "Start Survey",
+                link: "https://www.profitablecpmratenetwork.com/av12w48skm?key=a016e34186f663eaef12ef74f4622d62",
               }}
-              onComplete={handleTaskComplete}
+              onComplete={() => handleTaskComplete(0.00010232)}
             />
           </div>
         </section>
@@ -664,9 +669,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Ad Space 5 (Footer - A-ADS) ── */}
+      {/* ── Ad Space 5 (Footer - Adsterra) ── */}
       <div className="container py-4">
-        <AdSpace id="5" />
+        <div className="w-full flex justify-center">
+          <div id="container-0ee654d9e26c67d753bcd60504761f2b"></div>
+        </div>
       </div>
 
       {/* ── Wallet Connection Modal ── */}
