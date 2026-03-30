@@ -200,6 +200,9 @@ export default function Home() {
   const [withdrawalPending, setWithdrawalPending] = useState(false);
   const [totalBalance, setTotalBalance] = useState(0);
   const [earnedRewards, setEarnedRewards] = useState<Set<string>>(new Set());
+  const [connectedWallet, setConnectedWallet] = useState<string | null>(null);
+  const [walletInput, setWalletInput] = useState("");
+  const [showWalletModal, setShowWalletModal] = useState(false);
   const coinIdRef = useRef(0);
   const btnRef = useRef<HTMLButtonElement>(null);
 
@@ -223,7 +226,28 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [cooldown]);
 
+  const handleConnectWallet = () => {
+    const wallet = walletInput.trim();
+    if (!wallet) {
+      toast.error("Please enter a wallet address");
+      return;
+    }
+    if (!wallet.startsWith("D") || wallet.length !== 34) {
+      toast.error("Invalid Dogecoin address (must start with D and be 34 characters)");
+      return;
+    }
+    setConnectedWallet(wallet);
+    setWalletInput("");
+    setShowWalletModal(false);
+    toast.success(`✅ Wallet connected: ${wallet.slice(0, 6)}...${wallet.slice(-4)}`);
+  };
+
   const handleClaim = useCallback(async () => {
+    if (!connectedWallet) {
+      setShowWalletModal(true);
+      toast.warning("Please connect your wallet first to claim DOGE");
+      return;
+    }
     if (!isAuthenticated) {
       window.location.href = getLoginUrl();
       return;
@@ -293,7 +317,7 @@ export default function Home() {
     // Keep pending state for display
   };
 
-  const canClaim = cooldown === 0 && isAuthenticated;
+  const canClaim = cooldown === 0 && isAuthenticated && connectedWallet;
 
   return (
     <div
@@ -331,15 +355,27 @@ export default function Home() {
             <p className="text-xs text-amber-600 font-semibold">Much free. Very DOGE.</p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          {isAuthenticated && (
-            <div className="hidden sm:flex items-center gap-2 bg-amber-100 border-2 border-amber-300 rounded-xl px-4 py-2">
-              <span className="text-amber-600 text-sm font-bold">Balance:</span>
-              <span className="text-amber-800 font-extrabold text-sm">
-                {/* TODO: Replace with actual user balance from backend */}
-                0.0000 Ð
-              </span>
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-2 bg-amber-100 border-2 border-amber-300 rounded-xl px-4 py-2">
+            <span className="text-amber-600 text-sm font-bold">Balance:</span>
+            <span className="text-amber-800 font-extrabold text-sm">
+              {totalBalance.toFixed(4)} Ð
+            </span>
+          </div>
+          {connectedWallet ? (
+            <div className="bg-green-100 border-2 border-green-400 rounded-xl px-3 py-2 text-center">
+              <p className="text-xs text-green-600 font-bold">Wallet</p>
+              <p className="text-sm text-green-800 font-mono font-bold">{connectedWallet.slice(0, 6)}...{connectedWallet.slice(-4)}</p>
             </div>
+          ) : (
+            <motion.button
+              onClick={() => setShowWalletModal(true)}
+              className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 py-2 rounded-lg transition"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              🔗 Connect Wallet
+            </motion.button>
           )}
         </div>
       </header>
@@ -632,6 +668,64 @@ export default function Home() {
       <div className="container py-4">
         <AdSpace id="5" />
       </div>
+
+      {/* ── Wallet Connection Modal ── */}
+      <AnimatePresence>
+        {showWalletModal && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowWalletModal(false)}
+          >
+            <motion.div
+              className="doge-card p-8 max-w-md w-full space-y-6"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-2xl font-bold text-amber-800" style={{ fontFamily: "'Fredoka One', cursive" }}>
+                🔗 Connect Your Wallet
+              </h3>
+              <p className="text-amber-700 text-sm">Enter your Dogecoin address to start earning DOGE!</p>
+              
+              <div>
+                <label className="block text-amber-800 font-bold text-sm mb-2">Dogecoin Address</label>
+                <input
+                  type="text"
+                  value={walletInput}
+                  onChange={(e) => setWalletInput(e.target.value)}
+                  placeholder="D7xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-amber-300 bg-amber-50 text-amber-900 font-mono text-sm focus:outline-none focus:border-amber-500"
+                  onKeyPress={(e) => e.key === 'Enter' && handleConnectWallet()}
+                />
+                <p className="text-xs text-amber-500 mt-1">Addresses start with "D" and are 34 characters long</p>
+              </div>
+
+              <div className="flex gap-3">
+                <motion.button
+                  onClick={() => setShowWalletModal(false)}
+                  className="flex-1 py-2 bg-gray-300 text-gray-800 font-bold rounded-lg hover:bg-gray-400 transition"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  onClick={handleConnectWallet}
+                  className="flex-1 doge-btn-primary py-2"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  Connect
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Withdrawal Modal ── */}
       <AnimatePresence>
