@@ -76,3 +76,21 @@ export type Referral = typeof referrals.$inferSelect;
 export type InsertReferral = typeof referrals.$inferInsert;
 
 // TODO: Add your tables here
+/**
+ * Virtual miners - tracks user-owned miners for passive income
+ */
+export const miners = mysqlTable("miners", {
+  id: int("id").autoincrement().primaryKey(),
+  dogeAddress: varchar("dogeAddress", { length: 34 }).notNull(),
+  minerType: mysqlEnum("minerType", ["basic", "standard", "premium", "elite"]).notNull(),
+  cost: varchar("cost", { length: 32 }).notNull(),
+  incomePerHour: varchar("incomePerHour", { length: 32 }).notNull(),
+  totalIncome: varchar("totalIncome", { length: 32 }).default("0").notNull(),
+  lastCollectedAt: timestamp("lastCollectedAt").defaultNow().notNull(),
+  isActive: int("isActive").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Miner = typeof miners.$inferSelect;
+export type InsertMiner = typeof miners.$inferInsert;

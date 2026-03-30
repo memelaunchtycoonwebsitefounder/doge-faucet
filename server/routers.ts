@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { sendDogePayout, verifyFaucetPayConnection } from "./faucetpay";
 import { getLeaderboard, getUserReferralStats, getOrCreateUserStats } from "./faucet-helpers";
+import { purchaseMiner, getUserMiners, collectMinerIncome, getTotalPassiveIncomePerHour, MINER_TYPES } from "./miners-helpers";
 import { z } from "zod";
 
 export const appRouter = router({
@@ -208,6 +209,98 @@ export const appRouter = router({
           };
         } catch (error) {
           return { success: false, error: "Failed to fetch referral stats", data: null };
+        }
+      }),
+  }),
+
+  miners: router({
+    // Get available miner types
+    getTypes: publicProcedure.query(async () => {
+      return {
+        success: true,
+        data: Object.entries(MINER_TYPES).map(([key, value]) => ({
+          type: key,
+          ...value,
+        })),
+      };
+    }),
+
+    // Purchase a miner
+    purchase: publicProcedure
+      .input(z.object({
+        address: z.string().startsWith("D").length(34),
+        minerType: z.enum(["basic", "standard", "premium", "elite"]),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          const result = await purchaseMiner(input.address, input.minerType);
+          return {
+            success: true,
+            message: result.message,
+          };
+        } catch (error: any) {
+          return {
+            success: false,
+            error: error.message || "Failed to purchase miner",
+          };
+        }
+      }),
+
+    // Get user's miners
+    getUserMiners: publicProcedure
+      .input(z.object({ address: z.string().startsWith("D").length(34) }))
+      .query(async ({ input }) => {
+        try {
+          const userMiners = await getUserMiners(input.address);
+          return {
+            success: true,
+            data: userMiners,
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: "Failed to fetch miners",
+            data: [],
+          };
+        }
+      }),
+
+    // Collect income from miners
+    collectIncome: publicProcedure
+      .input(z.object({ address: z.string().startsWith("D").length(34) }))
+      .mutation(async ({ input }) => {
+        try {
+          const result = await collectMinerIncome(input.address);
+          return {
+            success: true,
+            totalIncome: result.totalIncome,
+            minersCount: result.minersCount,
+            message: `Collected ${result.totalIncome} DOGE from ${result.minersCount} miners!`,
+          };
+        } catch (error: any) {
+          return {
+            success: false,
+            error: error.message || "Failed to collect income",
+          };
+        }
+      }),
+
+    // Get total passive income per hour
+    getPassiveIncomePerHour: publicProcedure
+      .input(z.object({ address: z.string().startsWith("D").length(34) }))
+      .query(async ({ input }) => {
+        try {
+          const incomePerHour = await getTotalPassiveIncomePerHour(input.address);
+          return {
+            success: true,
+            incomePerHour,
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: "Failed to calculate income",
+            incomePerHour: "0",
+          };
         }
       }),
   }),

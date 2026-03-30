@@ -15,6 +15,13 @@
       "when": 1774890900030,
       "tag": "0001_cuddly_chamber",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1774893370985,
+      "tag": "0002_kind_the_call",
+      "breakpoints": true
     }
   ]
 }
