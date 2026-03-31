@@ -46,6 +46,25 @@ if (typeof window !== 'undefined') {
   const bannerInvokeScript = document.createElement('script');
   bannerInvokeScript.src = 'https://www.highperformanceformat.com/19cf032afad8f11d35833a2921442c1e/invoke.js';
   document.head.appendChild(bannerInvokeScript);
+
+  // Adsterra Popunder Ads (Prioritized)
+  const adsterraPopunder1 = document.createElement('script');
+  adsterraPopunder1.async = true;
+  adsterraPopunder1.src = 'https://pl29014556.profitablecpmratenetwork.com/0ee654d9e26c67d753bcd60504761f2b/invoke.js';
+  adsterraPopunder1.setAttribute('data-cfasync', 'false');
+  document.head.appendChild(adsterraPopunder1);
+
+  const adsterraPopunder2 = document.createElement('script');
+  adsterraPopunder2.async = true;
+  adsterraPopunder2.src = 'https://pl29014555.profitablecpmratenetwork.com/17/8e/40/178e4091eddcb131be13ce883019531d.js';
+  adsterraPopunder2.setAttribute('data-cfasync', 'false');
+  document.head.appendChild(adsterraPopunder2);
+
+  // EVADAY Popunder Ads
+  const evadayPopunder = document.createElement('script');
+  evadayPopunder.async = true;
+  evadayPopunder.src = 'https://pufted.com/p/waWQiOjEyMjMyNjQsInNpZCI6MTc0NjYyNSwid2lkIjo3Mzc4NzksInNyYyI6Mn0=eyJ.js';
+  document.head.appendChild(evadayPopunder);
 }
 
 // ─── Constants ────────────────────────────────────────────────
