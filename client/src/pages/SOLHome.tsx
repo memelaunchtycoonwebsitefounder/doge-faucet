@@ -430,10 +430,10 @@ export default function Home() {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
-          <div className="flex gap-1 sm:gap-2 w-full sm:w-auto justify-center flex-wrap">
+          <div className="flex gap-1 sm:gap-1.5 w-full sm:w-auto justify-center flex-wrap">
             <motion.button
               onClick={() => navigate('/')}
-              className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition font-bold"
+              className="px-1.5 sm:px-3 py-1 text-xs sm:text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition font-bold whitespace-nowrap"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               title="Switch to DOGE Faucet"
@@ -442,12 +442,21 @@ export default function Home() {
             </motion.button>
             <motion.button
               onClick={() => navigate('/trx')}
-              className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-bold"
+              className="px-1.5 sm:px-3 py-1 text-xs sm:text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-bold whitespace-nowrap"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               title="Switch to TRX Faucet"
             >
               ⚡ TRX
+            </motion.button>
+            <motion.button
+              onClick={() => navigate('/btc')}
+              className="px-1.5 sm:px-3 py-1 text-xs sm:text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-bold whitespace-nowrap"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title="Switch to BTC Faucet"
+            >
+              ₿ BTC
             </motion.button>
             <button onClick={() => navigate("/leaderboard")} className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-orange-400 text-white rounded-lg hover:bg-orange-500 transition font-bold">
               🏆 Leaderboard
