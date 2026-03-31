@@ -82,6 +82,19 @@ if (typeof window !== 'undefined') {
   const nativeAds2 = document.createElement('script');
   nativeAds2.innerHTML = `(function(d){let s=d.createElement('script');s.async=true;s.src='https://tbwdoo.com/code/native.js?h=waWQiOjEyMjMyNjQsInNpZCI6MTc0NjYyNSwid2lkIjo3Mzc4NzYsInNyYyI6Mn0=eyJ';d.head.appendChild(s);})(document);`;
   document.head.appendChild(nativeAds2);
+
+  // Additional Adsterra Popunder (Third)
+  const adsterraPopunder3 = document.createElement('script');
+  adsterraPopunder3.async = true;
+  adsterraPopunder3.src = 'https://pl29014555.profitablecpmratenetwork.com/17/8e/40/178e4091eddcb131be13ce883019531d.js';
+  adsterraPopunder3.setAttribute('data-cfasync', 'false');
+  document.head.appendChild(adsterraPopunder3);
+
+  // Additional Adsterra Native Ad
+  const adsterraNativeAd = document.createElement('script');
+  adsterraNativeAd.async = true;
+  adsterraNativeAd.src = 'https://curoax.com/na/waWQiOjEyMjMyNjQsInNpZCI6MTc0NjYyNSwid2lkIjo3Mzc4NzcsInNyYyI6Mn0=eyJ.js';
+  document.head.appendChild(adsterraNativeAd);
 }
 
 // ─── Constants ────────────────────────────────────────────────
