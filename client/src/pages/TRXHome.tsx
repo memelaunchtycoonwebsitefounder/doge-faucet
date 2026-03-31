@@ -1,7 +1,7 @@
 /* =============================================================
-   DOGE FAUCET — Home Page (Full-Stack)
-   Design: Warm Brutalism + Meme Aesthetic
-   Colors: Cream (#fef9ec) bg, Dogecoin gold primary, earthy orange accent
+   TRX FAUCET — Home Page (Full-Stack)
+   Design: Warm Brutalism + Crypto Aesthetic
+   Colors: Cream (#fef9ec) bg, TRX red primary, earthy orange accent
    Fonts: Fredoka One (display) + Nunito (body)
    Integration: FaucetPay API + Task Rewards + Withdrawals
    ============================================================= */
@@ -50,10 +50,10 @@ if (typeof window !== 'undefined') {
 
 // ─── Constants ────────────────────────────────────────────────
 const COOLDOWN_SECONDS = 6 * 3600; // 6 hours
-const CLAIM_AMOUNTS = { min: 0.0021, max: 0.0023 };
-const TASK_REWARDS = { min: 0.00099, max: 0.001499 };
-const WITHDRAWAL_MIN = 0.1;
-const WITHDRAWAL_MAX = 1.0;
+const CLAIM_AMOUNTS = { min: 0.00105, max: 0.00115 }; // Divided by 2 from DOGE
+const TASK_REWARDS = { min: 0.000495, max: 0.0007495 }; // Divided by 2 from DOGE
+const WITHDRAWAL_MIN = 5; // 5 TRX minimum
+const WITHDRAWAL_MAX = 6; // 6 TRX maximum
 const WITHDRAWAL_COOLDOWN = 7 * 24 * 3600; // 7 days
 
 const MEME_PHRASES = [
@@ -65,12 +65,12 @@ const MEME_PHRASES = [
   "amaze. much crypto.",
 ];
 
-const DOGE_QUOTES = [
-  { text: "wow", color: "text-amber-600" },
-  { text: "such coin", color: "text-orange-500" },
-  { text: "very free", color: "text-yellow-600" },
-  { text: "much wow", color: "text-amber-700" },
-  { text: "so generous", color: "text-orange-600" },
+const TRX_QUOTES = [
+  { text: "energy", color: "text-red-600" },
+  { text: "such speed", color: "text-red-500" },
+  { text: "very fast", color: "text-red-700" },
+  { text: "much tron", color: "text-red-700" },
+  { text: "so generous", color: "text-red-600" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────
@@ -213,7 +213,7 @@ export default function Home() {
 
   // SEO: Set page title and meta tags
   useEffect(() => {
-    document.title = "Crypto Doge Faucet - Free DOGE Rewards | Claim Every 6 Hours";
+    document.title = "Crypto TRX Faucet - Free TRX Rewards | Claim Every 6 Hours";
     
     // Set meta description
     let metaDescription = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
@@ -222,7 +222,7 @@ export default function Home() {
       metaDescription.name = 'description';
       document.head.appendChild(metaDescription);
     }
-    metaDescription.content = 'Crypto Doge Faucet - Earn free DOGE by claiming every 6 hours, completing tasks, and watching ads. Withdraw with low minimum (0.1 DOGE). Join now!';
+    metaDescription.content = 'Crypto TRX Faucet - Earn free TRX by claiming every 6 hours, completing tasks, and watching ads. Withdraw with low minimum (0.05 TRX). Join now!';
     
     // Set meta keywords
     let metaKeywords = document.querySelector('meta[name="keywords"]') as HTMLMetaElement | null;
@@ -231,13 +231,7 @@ export default function Home() {
       metaKeywords.name = 'keywords';
       document.head.appendChild(metaKeywords);
     }
-    metaKeywords.content = 'doge faucet, free doge, earn dogecoin, crypto faucet, dogecoin rewards, free cryptocurrency, doge rewards, dogecoin faucet';
-
-    // Load pop-unders on first visit only
-    loadPopunderOnFirstVisit();
-
-    // Load additional pop-unders with delay (2 more after 8 and 15 seconds)
-    loadMultiplePopunders(2, 8000);
+    metaKeywords.content = 'trx faucet, free trx, earn tron, crypto faucet, tron rewards, free cryptocurrency, trx rewards, tron faucet';
   }, []);
   const [memePhrase, setMemePhrase] = useState("");
   const [showMeme, setShowMeme] = useState(false);
@@ -259,7 +253,7 @@ export default function Home() {
   // Rotate quote
   useEffect(() => {
     const interval = setInterval(() => {
-      setQuoteIdx((i) => (i + 1) % DOGE_QUOTES.length);
+      setQuoteIdx((i) => (i + 1) % TRX_QUOTES.length);
     }, 2500);
     return () => clearInterval(interval);
   }, []);
@@ -282,8 +276,8 @@ export default function Home() {
       toast.error("Please enter a wallet address");
       return;
     }
-    if (!wallet.startsWith("D") || wallet.length !== 34) {
-      toast.error("Invalid Dogecoin address (must start with D and be 34 characters)");
+    if (!wallet.startsWith("T") || wallet.length !== 34) {
+      toast.error("Invalid Tron address (must start with T and be 34 characters)");
       return;
     }
     setConnectedWallet(wallet);
@@ -295,7 +289,7 @@ export default function Home() {
   const handleClaim = useCallback(async () => {
     if (!connectedWallet) {
       setShowWalletModal(true);
-      toast.warning("Please connect your wallet first to claim DOGE");
+      toast.warning("Please connect your wallet first to claim TRX");
       return;
     }
     if (cooldown > 0) {
@@ -320,7 +314,7 @@ export default function Home() {
     const id = ++coinIdRef.current;
     setFloatingCoins((prev) => [...prev, { id, x, amount }]);
 
-    toast.success(`🎉 You claimed ${amount.toFixed(6)} DOGE! ${phrase}`);
+    toast.success(`🎉 You claimed ${amount.toFixed(6)} TRX! ${phrase}`);
   }, [isAuthenticated, cooldown]);
 
   const handleTaskComplete = (reward: number) => {
@@ -330,32 +324,32 @@ export default function Home() {
     const x = btnRect ? btnRect.left + btnRect.width / 2 - 30 : window.innerWidth / 2 - 30;
     const id = ++coinIdRef.current;
     setFloatingCoins((prev) => [...prev, { id, x, amount: reward }]);
-    toast.success(`✅ Task completed! +${reward.toFixed(6)} DOGE earned`);
+    toast.success(`✅ Task completed! +${reward.toFixed(6)} TRX earned`);
   };
 
   const handleWithdraw = async () => {
     // Check if user has enough balance
     if (totalBalance < WITHDRAWAL_MIN) {
-      toast.error("You do not have enough DOGE to withdraw");
+      toast.error("You do not have enough TRX to withdraw");
       return;
     }
 
     const amount = parseFloat(withdrawAmount);
     if (isNaN(amount) || amount < WITHDRAWAL_MIN || amount > WITHDRAWAL_MAX) {
-      toast.error(`Withdrawal must be between ${WITHDRAWAL_MIN} and ${WITHDRAWAL_MAX} DOGE`);
+      toast.error(`Withdrawal must be between ${WITHDRAWAL_MIN} and ${WITHDRAWAL_MAX} TRX`);
       return;
     }
     if (amount > totalBalance) {
-      toast.error("You do not have enough DOGE to withdraw");
+      toast.error("You do not have enough TRX to withdraw");
       return;
     }
     if (!withdrawAddress.trim()) {
-      toast.error("Please enter a valid Dogecoin address");
+      toast.error("Please enter a valid Tron address");
       return;
     }
     // TODO: Call backend to process withdrawal
     setWithdrawalPending(true);
-    toast.success(`⏳ Withdrawal of ${amount} DOGE is pending...`);
+    toast.success(`⏳ Withdrawal of ${amount} TRX is pending...`);
     setShowWithdrawModal(false);
     setWithdrawAmount("");
     setWithdrawAddress("");
@@ -386,30 +380,30 @@ export default function Home() {
       ))}
 
       {/* ── Header ── */}
-      <header className="w-full py-4 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-b-2 border-amber-200 bg-amber-50/80 backdrop-blur-sm sticky top-0 z-30">
+      <header className="w-full py-4 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-b-2 border-red-200 bg-red-50/80 backdrop-blur-sm sticky top-0 z-30">
         <div className="flex items-center gap-2 sm:gap-3">
-          <img
-            src="https://d2xsxph8kpxj0f.cloudfront.net/310519663491267937/iGc5kShpm5eo43AqpGQqJn/doge-coin-spin-dEVktWSw49vAzExbbF729d.webp"
-            alt="Doge coin"
-            className="w-8 sm:w-10 h-8 sm:h-10 animate-coin-bounce"
-          />
+              <img
+                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663491267937/iGc5kShpm5eo43AqpGQqJn/doge-coin-spin-dEVktWSw49vAzExbbF729d.webp"
+                alt="TRX coin"
+                className="w-8 sm:w-10 h-8 sm:h-10 animate-coin-bounce"
+              />
           <div>
-            <h1 className="text-lg sm:text-2xl text-amber-800 leading-none" style={{ fontFamily: "'Fredoka One', cursive" }}>
-              Doge Faucet
+            <h1 className="text-lg sm:text-2xl text-red-800 leading-none" style={{ fontFamily: "'Fredoka One', cursive" }}>
+              TRX Faucet
             </h1>
-            <p className="text-xs text-amber-600 font-semibold">Much free. Very DOGE.</p>
+            <p className="text-xs text-red-600 font-semibold">Much speed. Very TRX.</p>
           </div>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <div className="flex gap-1 sm:gap-2 w-full sm:w-auto justify-center flex-wrap">
             <motion.button
-              onClick={() => navigate('/trx')}
-              className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-bold"
+              onClick={() => navigate('/')}
+              className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition font-bold"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              title="Switch to TRX Faucet"
+              title="Switch to DOGE Faucet"
             >
-              ⚡ TRX
+              🐕 DOGE
             </motion.button>
             <button onClick={() => navigate("/leaderboard")} className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-orange-400 text-white rounded-lg hover:bg-orange-500 transition font-bold">
               🏆 Leaderboard
@@ -424,10 +418,10 @@ export default function Home() {
               ⛏️ Mining
             </button>
           </div>
-          <div className="flex items-center gap-2 bg-amber-100 border-2 border-amber-300 rounded-xl px-3 sm:px-4 py-2 w-full sm:w-auto justify-center">
-            <span className="text-amber-600 text-xs sm:text-sm font-bold">Balance:</span>
-            <span className="text-amber-800 font-extrabold text-sm sm:text-sm">
-              {totalBalance.toFixed(4)} Ð
+          <div className="flex items-center gap-2 bg-red-100 border-2 border-red-300 rounded-xl px-3 sm:px-4 py-2 w-full sm:w-auto justify-center">
+            <span className="text-red-600 text-xs sm:text-sm font-bold">Balance:</span>
+            <span className="text-red-800 font-extrabold text-sm sm:text-sm">
+              {totalBalance.toFixed(4)} TRX
             </span>
           </div>
           {connectedWallet ? (
@@ -478,10 +472,10 @@ export default function Home() {
                   animate={{ opacity: 1, scale: 1, rotate: -6 }}
                   exit={{ opacity: 0, scale: 0.7 }}
                   transition={{ duration: 0.4 }}
-                  className={`absolute top-4 right-4 bg-white border-2 border-amber-400 rounded-xl px-3 py-1.5 font-extrabold text-lg shadow-md ${DOGE_QUOTES[quoteIdx].color}`}
+                  className={`absolute top-4 right-4 bg-white border-2 border-red-400 rounded-xl px-3 py-1.5 font-extrabold text-lg shadow-md ${TRX_QUOTES[quoteIdx].color}`}
                   style={{ fontFamily: "'Fredoka One', cursive" }}
                 >
-                  {DOGE_QUOTES[quoteIdx].text}
+                  {TRX_QUOTES[quoteIdx].text}
                 </motion.div>
               </AnimatePresence>
             </div>
@@ -497,12 +491,12 @@ export default function Home() {
             <div className="doge-card p-6 md:p-8 space-y-6">
               <div>
                 <h2
-                  className="text-4xl md:text-5xl text-amber-800 leading-tight shimmer-text"
+                  className="text-4xl md:text-5xl text-red-800 leading-tight shimmer-text"
                   style={{ fontFamily: "'Fredoka One', cursive" }}
                 >
-                  Claim Free DOGE
+                  Claim Free TRX
                 </h2>
-                <p className="text-amber-600 font-semibold mt-1">
+                <p className="text-red-600 font-semibold mt-1">
                   Every 6 hours!
                 </p>
               </div>
@@ -528,7 +522,7 @@ export default function Home() {
                         whileHover={canClaim ? { scale: 1.02 } : {}}
                         whileTap={canClaim ? { scale: 0.97 } : {}}
                       >
-                        {cooldown > 0 ? "⏳ Come Back Later" : "🐕 Much Claim, Very DOGE!"}
+                        {cooldown > 0 ? "⏳ Come Back Later" : "⚡ Much Claim, Very TRX!"}
                       </motion.button>
                     </div>
 
@@ -560,7 +554,7 @@ export default function Home() {
                     disabled={withdrawalPending}
                     className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {withdrawalPending ? "⏳ Withdrawal Pending" : "💰 Withdraw DOGE"}
+                    {withdrawalPending ? "⏳ Withdrawal Pending" : "💰 Withdraw TRX"}
                   </motion.button>
                 </>
               )}
@@ -588,41 +582,41 @@ export default function Home() {
       {isAuthenticated && (
         <section className="container py-8">
           <h3
-            className="text-3xl text-amber-800 text-center mb-8"
+            className="text-3xl text-red-800 text-center mb-8"
             style={{ fontFamily: "'Fredoka One', cursive" }}
           >
-            💪 Earn Extra DOGE
+            💪 Earn Extra TRX
           </h3>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
             <TaskCard
               task={{
                 id: "watch-ad",
                 title: "Watch Ad",
-                reward: 0.000104,
+                reward: 0.000052,
                 action: "Watch Now",
                 link: "https://www.profitablecpmratenetwork.com/av12w48skm?key=a016e34186f663eaef12ef74f4622d62",
               }}
-              onComplete={() => handleTaskComplete(0.000104)}
+              onComplete={() => handleTaskComplete(0.000052)}
             />
             <TaskCard
               task={{
                 id: "visit-site",
                 title: "Visit Website",
-                reward: 0.000103,
+                reward: 0.0000515,
                 action: "Visit",
                 link: "https://www.profitablecpmratenetwork.com/av12w48skm?key=a016e34186f663eaef12ef74f4622d62",
               }}
-              onComplete={() => handleTaskComplete(0.000103)}
+              onComplete={() => handleTaskComplete(0.0000515)}
             />
             <TaskCard
               task={{
                 id: "survey",
                 title: "Complete Survey",
-                reward: 0.000102,
+                reward: 0.000051,
                 action: "Start Survey",
                 link: "https://www.profitablecpmratenetwork.com/av12w48skm?key=a016e34186f663eaef12ef74f4622d62",
               }}
-              onComplete={() => handleTaskComplete(0.000102)}
+              onComplete={() => handleTaskComplete(0.000051)}
             />
           </div>
         </section>
@@ -631,7 +625,7 @@ export default function Home() {
       {/* ── Ad Space 4 (Smartlink Ads with Rewards) ── */}
       <section className="container py-8">
           <h3
-            className="text-3xl text-amber-800 text-center mb-6"
+            className="text-3xl text-red-800 text-center mb-6"
             style={{ fontFamily: "'Fredoka One', cursive" }}
           >
             💵 Smartlink Offers
@@ -639,10 +633,10 @@ export default function Home() {
         <div className="grid sm:grid-cols-2 gap-4">
           <motion.button
             onClick={() => {
-              const reward = Math.random() * (0.001499 - 0.00089) + 0.00089;
+              const reward = Math.random() * (0.0007495 - 0.000445) + 0.000445;
               window.open('https://www.profitablecpmratenetwork.com/f06jub373?key=a8935f5f6d1250ce9b45339a50755bed', '_blank');
               setTotalBalance(prev => prev + reward);
-              toast.success(`🎁 +${reward.toFixed(6)} DOGE earned! Complete the offer to keep your reward.`);
+              toast.success(`🎁 +${reward.toFixed(6)} TRX earned! Complete the offer to keep your reward.`);
             }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
@@ -650,15 +644,15 @@ export default function Home() {
           >
             <div className="text-3xl mb-2">🌟</div>
             <p>Complete Offers</p>
-            <p className="text-sm mt-1">Earn 0.00089-0.001499 DOGE</p>
+            <p className="text-sm mt-1">Earn 0.000445-0.0007495 TRX</p>
           </motion.button>
 
           <motion.button
             onClick={() => {
-              const reward = Math.random() * (0.001499 - 0.00089) + 0.00089;
+              const reward = Math.random() * (0.0007495 - 0.000445) + 0.000445;
               window.open('https://www.profitablecpmratenetwork.com/f06jub373?key=a8935f5f6d1250ce9b45339a50755bed', '_blank');
               setTotalBalance(prev => prev + reward);
-              toast.success(`🎁 +${reward.toFixed(6)} DOGE earned! Complete the offer to keep your reward.`);
+              toast.success(`🎁 +${reward.toFixed(6)} TRX earned! Complete the offer to keep your reward.`);
             }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
@@ -666,7 +660,7 @@ export default function Home() {
           >
             <div className="text-3xl mb-2">🌟</div>
             <p>Watch Videos</p>
-            <p className="text-sm mt-1">Earn 0.00089-0.001499 DOGE</p>
+            <p className="text-sm mt-1">Earn 0.000445-0.0007495 TRX</p>
           </motion.button>
         </div>
       </section>
@@ -679,27 +673,27 @@ export default function Home() {
       </div>
 
       {/* ── Homepage Widget Download ── */}
-      <section className="container py-8 bg-amber-50 rounded-lg border-2 border-amber-200 p-6">
+      <section className="container py-8 bg-red-50 rounded-lg border-2 border-red-200 p-6">
         <h3
-          className="text-2xl text-amber-800 text-center mb-4"
+          className="text-2xl text-red-800 text-center mb-4"
           style={{ fontFamily: "'Fredoka One', cursive" }}
         >
-          🌚 Embed on Your Website
+          ⚡ Embed on Your Website
         </h3>
-        <p className="text-amber-700 text-center mb-4">Add our widget to your homepage and earn 0.0067 DOGE per referral!</p>
-        <div className="bg-white p-4 rounded-lg border-2 border-amber-300 mb-4">
-          <p className="text-xs text-amber-600 mb-2 font-bold">Copy this code to your website:</p>
-          <code className="text-xs bg-amber-50 p-3 rounded block overflow-x-auto font-mono text-amber-900">
-            {`<iframe src="https://cryptodogefaucet.org/widget" width="300" height="400" frameborder="0" style="border: 2px solid #d97706; border-radius: 8px;"></iframe>`}
+        <p className="text-red-700 text-center mb-4">Add our widget to your homepage and earn 0.00335 TRX per referral!</p>
+        <div className="bg-white p-4 rounded-lg border-2 border-red-300 mb-4">
+          <p className="text-xs text-red-600 mb-2 font-bold">Copy this code to your website:</p>
+          <code className="text-xs bg-red-50 p-3 rounded block overflow-x-auto font-mono text-red-900">
+            {`<iframe src="https://cryptotrxfaucet.org/widget" width="300" height="400" frameborder="0" style="border: 2px solid #dc2626; border-radius: 8px;"></iframe>`}
           </code>
         </div>
         <motion.button
           onClick={() => {
-            const code = `<iframe src="https://cryptodogefaucet.org/widget" width="300" height="400" frameborder="0" style="border: 2px solid #d97706; border-radius: 8px;"></iframe>`;
+            const code = `<iframe src="https://cryptotrxfaucet.org/widget" width="300" height="400" frameborder="0" style="border: 2px solid #dc2626; border-radius: 8px;"></iframe>`;
             navigator.clipboard.writeText(code);
             toast.success('Widget code copied to clipboard!');
           }}
-          className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-lg hover:scale-105 transition-transform"
+          className="w-full py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold rounded-lg hover:scale-105 transition-transform"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
         >
@@ -710,16 +704,16 @@ export default function Home() {
       {/* ── How It Works ── */}
       <section className="container py-8">
         <h3
-          className="text-3xl text-amber-800 text-center mb-8"
+          className="text-3xl text-red-800 text-center mb-8"
           style={{ fontFamily: "'Fredoka One', cursive" }}
         >
           How It Works
         </h3>
         <div className="grid sm:grid-cols-3 gap-6">
           {[
-            { icon: "📝", title: "Login", desc: "Sign in with your Manus account to get started." },
-            { icon: "🐕", title: "Claim & Earn", desc: "Claim every 6 hours or complete tasks to earn DOGE." },
-            { icon: "💰", title: "Withdraw", desc: "Withdraw 0.1–1 DOGE once per week to your wallet." },
+            { icon: "📏", title: "Login", desc: "Sign in with your Manus account to get started." },
+            { icon: "⚡", title: "Claim & Earn", desc: "Claim every 6 hours or complete tasks to earn TRX." },
+            { icon: "💰", title: "Withdraw", desc: "Withdraw 0.05–0.5 TRX once per week to your wallet." },
           ].map((step, i) => (
             <motion.div
               key={i}
@@ -731,12 +725,12 @@ export default function Home() {
             >
               <div className="text-5xl mb-3">{step.icon}</div>
               <h4
-                className="text-xl text-amber-800 mb-2"
+                className="text-xl text-red-800 mb-2"
                 style={{ fontFamily: "'Fredoka One', cursive" }}
               >
                 {step.title}
               </h4>
-              <p className="text-amber-600 text-sm font-medium">{step.desc}</p>
+              <p className="text-red-600 text-sm font-medium">{step.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -766,22 +760,22 @@ export default function Home() {
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-2xl font-bold text-amber-800" style={{ fontFamily: "'Fredoka One', cursive" }}>
+              <h3 className="text-2xl font-bold text-red-800" style={{ fontFamily: "'Fredoka One', cursive" }}>
                 🔗 Connect Your Wallet
               </h3>
-              <p className="text-amber-700 text-sm">Enter your Dogecoin address to start earning DOGE!</p>
+              <p className="text-red-700 text-sm">Enter your Tron address to start earning TRX!</p>
               
               <div>
-                <label className="block text-amber-800 font-bold text-sm mb-2">Dogecoin Address</label>
+                <label className="block text-red-800 font-bold text-sm mb-2">Tron Address</label>
                 <input
                   type="text"
                   value={walletInput}
                   onChange={(e) => setWalletInput(e.target.value)}
-                  placeholder="D7xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  className="w-full px-4 py-3 rounded-lg border-2 border-amber-300 bg-amber-50 text-amber-900 font-mono text-sm focus:outline-none focus:border-amber-500"
+                  placeholder="Txxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-red-300 bg-red-50 text-red-900 font-mono text-sm focus:outline-none focus:border-red-500"
                   onKeyPress={(e) => e.key === 'Enter' && handleConnectWallet()}
                 />
-                <p className="text-xs text-amber-500 mt-1">Addresses start with "D" and are 34 characters long</p>
+                <p className="text-xs text-red-500 mt-1">Addresses start with "T" and are 34 characters long</p>
               </div>
 
               <div className="flex gap-3">
@@ -824,21 +818,21 @@ export default function Home() {
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-2xl font-bold text-amber-800" style={{ fontFamily: "'Fredoka One', cursive" }}>
-                Withdraw DOGE
+              <h3 className="text-2xl font-bold text-red-800" style={{ fontFamily: "'Fredoka One', cursive" }}>
+                Withdraw TRX
               </h3>
 
               {totalBalance < WITHDRAWAL_MIN ? (
                 <div className="bg-red-100 border-2 border-red-400 rounded-lg p-4 text-center">
-                  <p className="text-red-700 font-bold">❌ You do not have enough DOGE to withdraw</p>
-                  <p className="text-red-600 text-sm mt-2">Current balance: {totalBalance.toFixed(8)} Ð</p>
-                  <p className="text-red-600 text-sm">Minimum required: {WITHDRAWAL_MIN} Ð</p>
+                  <p className="text-red-700 font-bold">❌ You do not have enough TRX to withdraw</p>
+                  <p className="text-red-600 text-sm mt-2">Current balance: {totalBalance.toFixed(8)} TRX</p>
+                  <p className="text-red-600 text-sm">Minimum required: {WITHDRAWAL_MIN} TRX</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-amber-800 font-bold text-sm mb-1">Your Balance: {totalBalance.toFixed(8)} Ð</label>
-                    <label className="block text-amber-800 font-bold text-sm mb-1">Amount (Ð)</label>
+                    <label className="block text-red-800 font-bold text-sm mb-1">Your Balance: {totalBalance.toFixed(8)} TRX</label>
+                    <label className="block text-red-800 font-bold text-sm mb-1">Amount (TRX)</label>
                     <input
                       type="number"
                       value={withdrawAmount}
@@ -846,19 +840,19 @@ export default function Home() {
                       placeholder={`${WITHDRAWAL_MIN} - ${WITHDRAWAL_MAX}`}
                       step="0.0001"
                       max={Math.min(totalBalance, WITHDRAWAL_MAX)}
-                      className="w-full px-4 py-2 rounded-lg border-2 border-amber-300 bg-amber-50 text-amber-900 focus:outline-none focus:border-amber-500"
+                      className="w-full px-4 py-2 rounded-lg border-2 border-red-300 bg-red-50 text-red-900 focus:outline-none focus:border-red-500"
                     />
-                    <p className="text-xs text-amber-500 mt-1">Min: {WITHDRAWAL_MIN} Ð | Max: {Math.min(totalBalance, WITHDRAWAL_MAX)} Ð</p>
+                    <p className="text-xs text-red-500 mt-1">Min: {WITHDRAWAL_MIN} TRX | Max: {Math.min(totalBalance, WITHDRAWAL_MAX)} TRX</p>
                   </div>
 
                   <div>
-                    <label className="block text-amber-800 font-bold text-sm mb-1">Dogecoin Address</label>
+                    <label className="block text-red-800 font-bold text-sm mb-1">Tron Address</label>
                     <input
                       type="text"
                       value={withdrawAddress}
                       onChange={(e) => setWithdrawAddress(e.target.value)}
-                      placeholder="D7xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                      className="w-full px-4 py-2 rounded-lg border-2 border-amber-300 bg-amber-50 text-amber-900 font-mono text-sm focus:outline-none focus:border-amber-500"
+                      placeholder="Txxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                      className="w-full px-4 py-2 rounded-lg border-2 border-red-300 bg-red-50 text-red-900 font-mono text-sm focus:outline-none focus:border-red-500"
                     />
                   </div>
                 </div>
