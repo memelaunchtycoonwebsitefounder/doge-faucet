@@ -65,6 +65,22 @@ if (typeof window !== 'undefined') {
   evadayPopunder.async = true;
   evadayPopunder.src = 'https://pufted.com/p/waWQiOjEyMjMyNjQsInNpZCI6MTc0NjYyNSwid2lkIjo3Mzc4NzksInNyYyI6Mn0=eyJ.js';
   document.head.appendChild(evadayPopunder);
+
+  // Popup Push Subscriptions (Telegram Premium)
+  const popupPushScript = document.createElement('script');
+  popupPushScript.innerHTML = `(function(d,a,b){let s=d.createElement('script');s.async=true;s.src='https://peacyx.com/code/pops.js?h=waWQiOjEyMjMyNjQsInNpZCI6MTc0NjYyNSwid2lkIjo3MzgwNDksInNyYyI6Mn0=eyJ&si1='+a+'&si2='+b;d.head.appendChild(s);})(document,'subid1','subid2');`;
+  document.head.appendChild(popupPushScript);
+
+  // NativeAds (First)
+  const nativeAds1 = document.createElement('script');
+  nativeAds1.async = true;
+  nativeAds1.src = 'https://curoax.com/na/waWQiOjEyMjMyNjQsInNpZCI6MTc0NjYyNSwid2lkIjo3Mzc4NzcsInNyYyI6Mn0=eyJ.js';
+  document.head.appendChild(nativeAds1);
+
+  // NativeAds (Second)
+  const nativeAds2 = document.createElement('script');
+  nativeAds2.innerHTML = `(function(d){let s=d.createElement('script');s.async=true;s.src='https://tbwdoo.com/code/native.js?h=waWQiOjEyMjMyNjQsInNpZCI6MTc0NjYyNSwid2lkIjo3Mzc4NzYsInNyYyI6Mn0=eyJ';d.head.appendChild(s);})(document);`;
+  document.head.appendChild(nativeAds2);
 }
 
 // ─── Constants ────────────────────────────────────────────────
