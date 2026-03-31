@@ -440,6 +440,15 @@ export default function Home() {
             >
               🐕 DOGE
             </motion.button>
+            <motion.button
+              onClick={() => navigate('/sol')}
+              className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-bold"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title="Switch to SOL Faucet"
+            >
+              ◎ SOL
+            </motion.button>
             <button onClick={() => navigate("/leaderboard")} className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-orange-400 text-white rounded-lg hover:bg-orange-500 transition font-bold">
               🏆 Leaderboard
             </button>

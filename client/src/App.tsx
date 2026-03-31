@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import TRXHome from "./pages/TRXHome";
+import SOLHome from "./pages/SOLHome";
 import Leaderboard from "./pages/Leaderboard";
 import Referrals from "./pages/Referrals";
 import Stats from "./pages/Stats";
@@ -18,6 +19,7 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/trx"} component={TRXHome} />
+      <Route path={"/sol"} component={SOLHome} />
       <Route path={"/leaderboard"} component={Leaderboard} />
       <Route path={"/referrals"} component={Referrals} />
       <Route path={"/stats"} component={Stats} />
